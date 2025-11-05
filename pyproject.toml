@@ -1,0 +1,30 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Your Name",email = "you@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "python-dotenv (>=1.1.1,<2.0.0)",
+    "psycopg2 (>=2.9.10,<3.0.0)",
+    "fastapi[standard] (>=0.119.0,<0.120.0)",
+    "itsdangerous (>=2.2.0,<3.0.0)",
+    "pydantic-settings (>=2.11.0,<3.0.0)",
+    "sqlalchemy (>=2.0.44,<3.0.0)",
+    "bcrypt (>=5.0.0,<6.0.0)",
+    "passlib (>=1.7.4,<2.0.0)",
+    "supabase (>=2.22.0,<3.0.0)",
+    "alembic (>=1.17.0,<2.0.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# 👇 Add this so Poetry knows your source is inside "src"
+[tool.setuptools.packages.find]
+where = ["src"]

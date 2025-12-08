@@ -1,32 +1,73 @@
-# src/backend/utils/db_utils.py
-from backend.models.business.service_model import BusinessService
-from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from fastapi import Depends
-from ...depends.dependencies import get_current_user
-from ...models.business.business_model import BusinessEmail, BusinessLocation, BusinessPhone, BusinessSocial, Business
-from ...schemas.business.business_schema import BusinessCreate, BusinessResponse, BusinessUpdate
-from ...models.user.user_model import User
-from ...schemas.user.user_schema import UserCreate
+from sqlalchemy.orm import Session
 from typing import Union
+from ...schemas.business.business_schema import BusinessCreate, BusinessEmailResponse, BusinessLocationResponse, BusinessPhoneResponse, BusinessResponse, BusinessSocialResponse, BusinessUpdate
+from ...models.business.business_model import BusinessEmail, BusinessLocation, BusinessPhone, BusinessSocial, Business
 from ...utils.logger_utils import LoggerUtils
-logger = LoggerUtils.get_logger("DB Utils")
-class DBUtils:
+logger = LoggerUtils.get_logger("Business DB Utils")
+class BusinessDBUtils:
     def __init__(self, db: Session):
         self.db = db
 
-    def email_exists(self, email: str) -> None:
+    def get_business_by_name(self, name: str):
         """
-        Raises HTTPException if a user with the given email already exists.
+        Retrieve a BusinessEmail, BusinessPhone, BusinessSocial, Business by its name.
         """
-        existing_user = self.db.query(User).filter(User.email == email).first()
-        if existing_user:
-            logger.warning(f"Attempt to register with existing email: {email}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered."
-            )
+        try:
+            business = self.db.query(Business).filter(Business.name.ilike(name)).first()
+            if not business:
+                logger.warning(f"Business not found: {name}")
+                raise HTTPException(
+                    status_code= status.HTTP_404_NOT_FOUND,
+                    detail="Business not found."
+                )
+            # get the id of the business
+            business_id = self.get_business_id(name)
+            business_obj = self.db.query(Business).filter(Business.id == business_id).first()
+            # get BusinessEmail, BusinessPhone, BusinessSocial where business_id matches
+            emails = self.db.query(BusinessEmail).filter(BusinessEmail.business_id == business_id).all()
+            phones = self.db.query(BusinessPhone).filter(BusinessPhone.business_id == business_id).all()
+            socials = self.db.query(BusinessSocial).filter(BusinessSocial.business_id == business_id).all()
+            locations = self.db.query(BusinessLocation).filter(BusinessLocation.business_id == business_id).all()
+            email_dict = [BusinessEmailResponse.model_validate(p) for p in emails]
+            phones_dict = [BusinessPhoneResponse.model_validate(p) for p in phones]
+            socials_dict = [BusinessSocialResponse.model_validate(p) for p in socials]
+            locations_dict = [BusinessLocationResponse.model_validate(p) for p in locations]
+            # logger.info(f'Emails retrieved for business {name}: {email_dict}')
+            business_response = {
+                "id": business_obj.id,
+                "owner_id": business_obj.owner_id,
+                "name": business_obj.name,
+                "description": business_obj.description,
+                "phones": phones_dict,
+                "emails": email_dict,
+                "locations": locations_dict,
+                "socials": socials_dict,
+                "created_at": business_obj.created_at,
+                "updated_at": business_obj.updated_at
+            }
 
+            return business_response
+        except HTTPException as e:
+            logger.error(f"Error retrieving business by name: {name} - {str(e)}")
+            raise e
+        except Exception as e:
+            logger.error(f"Unexpected error retrieving business by name: {name} - {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred while retrieving the business."
+            )
+                                                        
+    def get_business(self, business_name: str):
+        business = self.db.query(Business).filter(Business.name == business_name).first()
+        return business
+    
+    def get_business_id(self, business_name: str):
+        business = self.get_business(business_name)
+        if business:
+            return business.id
+        return None
+    
     def business_exists(self, business_data: Union[BusinessCreate, BusinessUpdate]) -> bool:
         """
         Check whether a business with the same name, contacts, or socials exists.
@@ -95,51 +136,3 @@ class DBUtils:
             detail=f"Error checking business existence: {str(e)}"
             )
     
-    def get_current_user_id(self, email) -> int:
-        logger.info(f"Fetching user ID for email: {email}")
-        user_obj = self.db.query(User).filter(User.email == email).first()
-        if not user_obj:
-            logger.error(f"User not found in DB for email: {email}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found."
-            )
-        return user_obj.id
-    
-    def get_business_id(self, business_name: str) -> str:
-        logger.info(f"Fetching business ID for business name: {business_name}")
-        business_obj = self.db.query(Business).filter(Business.name == business_name).first()
-        if not business_obj:
-            logger.error(f"Business not found in DB for name: {business_name}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Business not found."
-            )
-        return business_obj.id
-    
-    
-    def user_business_exists(self, business_id: str, user_id: int) -> Business:
-        logger.info(f"Fetching business ID: {business_id} for user ID: {user_id}")
-        business_obj = self.db.query(Business).filter(
-            Business.id == business_id,
-            Business.owner_id == user_id
-        ).first()
-        if not business_obj:
-            logger.error(f"Business not found or does not belong to user ID: {user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Business not found or does not belong to the user."
-            )
-        
-    def existing_service(self, business_id: str, service_name: str):
-        logger.info(f"Checking for existing service '{service_name}' in business ID: {business_id}")
-        existing_service = self.db.query(BusinessService).filter(
-            BusinessService.business_id == business_id,
-            BusinessService.name.ilike(service_name)
-        ).first()
-        if existing_service:
-            logger.warning(f"Service '{service_name}' already exists in business ID: {business_id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Service '{service_name}' already exists for this business."
-            )

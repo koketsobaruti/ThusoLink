@@ -77,6 +77,7 @@ class BusinessPhoneUpdate(BaseModel):
 
 class BusinessEmailUpdate(BaseModel):
     email: Optional[EmailStr] = None  # optional for updating existing email
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class BusinessLocationUpdate(BaseModel):
     address_line1: Optional[str] = None
@@ -101,49 +102,58 @@ class BusinessUpdate(BaseModel):
     socials: Optional[List[BusinessSocialUpdate]] = None
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-# ------------------- Response Schemas -------------------
 class BusinessPhoneResponse(BusinessPhoneCreate):
     id: UUID
-    created_at: datetime
-    updated_at: Optional[datetime]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {
+    "from_attributes": True
+}
 
 class BusinessEmailResponse(BusinessEmailCreate):
     id: UUID
-    created_at: datetime
-    updated_at: Optional[datetime]
+    business_id: UUID
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {
+    "from_attributes": True
+    }
 
 class BusinessLocationResponse(BusinessLocationCreate):
     id: UUID
-    created_at: datetime
-    updated_at: Optional[datetime]
+    business_id: UUID
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {
+    "from_attributes": True
+}
 
 class BusinessSocialResponse(BusinessSocialCreate):
     id: UUID
-    created_at: datetime
-    updated_at: Optional[datetime]
+    business_id: UUID
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {
+    "from_attributes": True
+}
 
 class BusinessResponse(BusinessBase):
     id: UUID
     owner_id: UUID
+    name: str
+    description: Optional[str] = None
     phones: List[BusinessPhoneResponse] = []
     emails: List[BusinessEmailResponse] = []
     locations: List[BusinessLocationResponse] = []
     socials: List[BusinessSocialResponse] = []
-    created_at: datetime
-    updated_at: Optional[datetime]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {
+    "from_attributes": True
+}
 

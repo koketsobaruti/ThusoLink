@@ -6,6 +6,7 @@ from backend.database.connection import Base  # Import your Base model
 from alembic import context
 from backend.models.user import user_model
 from backend.models.business import business_model
+from backend.models.business import service_model
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

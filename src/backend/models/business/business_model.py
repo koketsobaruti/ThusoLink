@@ -27,6 +27,7 @@ class Business(Base):
 
     # Relationships
     owner = relationship("User", back_populates="businesses")
+    services = relationship("BusinessService", back_populates="business")
     phones = relationship("BusinessPhone", back_populates="businesses", cascade="all, delete-orphan")
     emails = relationship("BusinessEmail", back_populates="businesses", cascade="all, delete-orphan")
     # contacts = relationship("BusinessContact", back_populates="businesses", cascade="all, delete-orphan")

@@ -1,0 +1,17 @@
+from backend.utils.database.business_db_utils import BusinessDBUtils
+from sqlalchemy.orm import Session
+# import GeneralResponse schema
+from ...schemas.general_response import GeneralResponse
+class BusinessManager:
+    def __init__(self, db: Session):
+        self.db = db
+        self.db_utils = BusinessDBUtils(self.db)
+
+    def get_business_by_name(self, name: str):
+        business = self.db_utils.get_business_by_name(name)
+        return GeneralResponse( 
+            status= 200, 
+            message="Business retrieved successfully",
+            data= business
+            )
+            

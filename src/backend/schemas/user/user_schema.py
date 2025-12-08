@@ -37,10 +37,8 @@ PasswordStr = Annotated[
 ]
 
 class UserBase(BaseModel):
-    id: Optional[uuid.UUID]
     full_name: str = Field(..., min_length=2)
     email: Optional[EmailStr]
-    timestamps: Optional["Timestamps"]
 
 # -------------------------
 # User creation model

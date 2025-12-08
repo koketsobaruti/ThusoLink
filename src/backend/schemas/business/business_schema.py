@@ -67,7 +67,6 @@ class BusinessCreate(BusinessBase):
     emails: Optional[List[BusinessEmailCreate]] = []
     locations: Optional[List[BusinessLocationCreate]] = []
     socials: Optional[List[BusinessSocialCreate]] = []
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # ------------------- Update Schemas -------------------
 class BusinessPhoneUpdate(BaseModel):

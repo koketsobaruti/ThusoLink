@@ -1,40 +1,34 @@
 import datetime
 from fastapi import HTTPException, status
 from backend.models.business.service_model import BusinessService
-from backend.schemas.business.service_schema import BusinessServiceCreate
+from backend.schemas.business.service_schema import BusinessServiceCreate, BusinessServiceListResponse, BusinessServiceResponse
 from backend.schemas.general_response import GeneralResponse
 from backend.utils.database.business_db_utils import BusinessDBUtils
 from sqlalchemy.orm import Session
+from ...utils.logger_utils import LoggerUtils
+logger = LoggerUtils.get_logger("Service Manager")
 class ServiceManager:
     def __init__(self, db: Session):
         self.db = db
         self.bus_db_utils = BusinessDBUtils(self.db)
 
-    def create_service(self, service_data:BusinessServiceCreate):
-        try: # check if business exists
-            self.bus_db_utils.business_exists(service_data.business_name)
-            # get business_id_by_name 
-            business_id = self.bus_db_utils.get_business_id(service_data.business_name)
-            # create service logic here
-            now = datetime.now(datetime.timezone.utc)
-            new_service = BusinessService(
-                business_id=business_id,
-                name=service_data.name,
-                description=service_data.description,
-                price=service_data.price,
-                currency=service_data.currency,
-                created_at=now,
-                updated_at=now
+    def view_all_services(self, business_name: str) -> list[BusinessService]:
+        try:
+            self.bus_db_utils.get_business(business_name)
+            business_id = self.bus_db_utils.get_business_id(business_name)
+            services = self.db.query(BusinessService).filter(BusinessService.business_id == business_id).all()
+            
+            services_dict = [BusinessServiceResponse.model_validate(p) for p in services]
+            logger.info(f"List of services {services_dict}")
+            return GeneralResponse(
+                status=status.HTTP_200_OK,
+                message="Services retrieved successfully",
+                data={"services": services_dict} 
             )
-
-            self.db.add(new_service)
-            self.db.commit()
-            self.db.refresh(new_service)
-            return GeneralResponse(status=status.HTTP_201_CREATED,
-                                    message="User registered successfully"
-                                    )
-        except Exception as e:
+        
+        except HTTPException as e:
             self.db.rollback()
+            logger.error(f"Error getting all services for business {business_name}: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"An error occurred: {str(e)}"

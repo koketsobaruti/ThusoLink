@@ -18,11 +18,6 @@ async def get_business_info(name: str, DB: Session = Depends(get_db)):
     response = business_manager.get_business_by_name(name)
     return response
 
-@router.post("/get-business-services")
-async def get_business_services():
-    logger.info("Get business services endpoint called")
-    return {"message": "business services retrieved successfully"}
-
 @router.post("/update-business-info")
 async def update_business_info():
     logger.info("Update business info endpoint called")

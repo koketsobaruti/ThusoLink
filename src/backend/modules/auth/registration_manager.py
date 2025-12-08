@@ -67,10 +67,13 @@ class RegistrationManager:
             
             # If no duplicates, proceed to create business
             # 2️⃣ Create the Business object and set relationships
+            now = datetime.now(timezone.utc)
             new_business = Business(
                 owner_id=user_id,
                 name=business.name,
-                description=business.description
+                description=business.description,
+                created_at=now,
+                updated_at=now
             )
 
             # # 3️⃣ Add contacts via relationship

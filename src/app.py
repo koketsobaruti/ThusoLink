@@ -9,10 +9,11 @@ app = FastAPI()
 # Add session middleware
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 # add routes
-from backend.routes import business, login, register, booking
+from backend.routes import business, login, register, booking, services
 app.include_router(login.router, prefix="/api/auth/logins")
 app.include_router(register.router, prefix="/api/auth/registrations")
 app.include_router(business.router, prefix="/api/business")
+app.include_router(services.router, prefix="/api/services")
 # app.include_router(booking.router, prefix="/api/bookings")
 
 # Simple health check route

@@ -131,7 +131,7 @@ class DBUtils:
                 detail="Business not found or does not belong to the user."
             )
         
-    def existing_service(self, business_id: str, service_name: str):
+    def existing_service(self, service_name: str, business_id: str):
         logger.info(f"Checking for existing service '{service_name}' in business ID: {business_id}")
         existing_service = self.db.query(BusinessService).filter(
             BusinessService.business_id == business_id,

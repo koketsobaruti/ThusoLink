@@ -59,14 +59,33 @@ class BusinessDBUtils:
             )
                                                         
     def get_business(self, business_name: str):
-        business = self.db.query(Business).filter(Business.name == business_name).first()
-        return business
-    
+        try:
+            business = self.db.query(Business).filter(Business.name == business_name).first()
+            return business
+        except Exception as e:
+            logger.error(f"Error fetching business {business_name}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error fetching business {business_name}: {str(e)}"
+            )
+        
     def get_business_id(self, business_name: str):
-        business = self.get_business(business_name)
-        if business:
-            return business.id
-        return None
+        try:
+            business = self.get_business(business_name)
+            if business:
+                return business.id
+            else:
+                logger.warning(f"Business not found when fetching ID: {business_name}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Business not found."
+                )
+        except HTTPException:
+            # Re-raise HTTPExceptions so they aren't wrapped as 500
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching business ID for {business_name}: {str(e)}")
+            
     
     def business_exists(self, business_data: Union[BusinessCreate, BusinessUpdate]) -> bool:
         """

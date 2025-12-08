@@ -14,7 +14,6 @@ class CurrencyEnum(str, Enum):
 
 # ------------------- Base Schema -------------------
 class BusinessServiceCreate(BaseModel):
-    business_name: str
     name: str
     description: Optional[str] = None
     price: float
@@ -33,11 +32,20 @@ class BusinessServiceUpdate(BaseModel):
     currency: Optional[CurrencyEnum] = None
 
 # ------------------- Response Schema -------------------
-class BusinessServiceResponse(BusinessServiceCreate):
+class BusinessServiceResponse(BaseModel):
     id: UUID
     business_id: UUID
+    name: str
+    description: str
+    price: float
+    currency: str
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class BusinessServiceListResponse(BaseModel):
+    services: list[BusinessServiceResponse]

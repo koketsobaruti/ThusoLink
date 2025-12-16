@@ -1,6 +1,9 @@
+from backend.depends.dependencies import get_current_user
+from backend.modules.auth.registration_manager import RegistrationManager
+from backend.modules.auth.registration_manager import RegistrationManager
 from backend.utils.database.business_db_utils import BusinessDBUtils
 from backend.utils.database.db_utils import DBUtils
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from ..utils.logger_utils import LoggerUtils
 logger = LoggerUtils.get_logger("Services Routes")
@@ -30,8 +33,12 @@ async def delete_service():
     return {"message": "service deleted successfully"}
 
 @router.post("/add-service")
-async def add_service():
-    logger.info("Add service endpoint called")
-
-    return {"message": "service added successfully"}    
+async def add_service(request: Request, business_name: str, service:service_schema.BusinessServiceCreate,
+                            current_user: dict = Depends(get_current_user), DB: Session = Depends(get_db)):
+    db_utils = DBUtils(DB)
+    user_id = db_utils.get_current_user_id(current_user['username'])
+    business_id = db_utils.get_business_id(business_name)
+    registration_manager = RegistrationManager(DB)
+    response = registration_manager.register_service(service, user_id, business_id)
+    return response
 

@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from enum import Enum
-from backend.database.connection import Base
+from ...database.connection import Base
 from ...schemas.business.business_schema import SocialPlatform
 
 # ------------------- Business Model -------------------

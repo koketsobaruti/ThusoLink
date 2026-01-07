@@ -86,7 +86,6 @@ class BusinessDBUtils:
         except Exception as e:
             logger.error(f"Error fetching business ID for {business_name}: {str(e)}")
             
-    
     def business_exists(self, business_data: Union[BusinessCreate, BusinessUpdate]) -> bool:
         """
         Check whether a business with the same name, contacts, or socials exists.
@@ -155,3 +154,50 @@ class BusinessDBUtils:
             detail=f"Error checking business existence: {str(e)}"
             )
     
+    def get_businesses_by_user(self, user_id: int):
+        """
+        Retrieve all businesses associated with a specific user ID.
+        """
+        try:
+            businesses = self.db.query(Business).filter(Business.owner_id == user_id).all()
+            if not businesses:
+                logger.warning(f"No businesses found for user ID: {user_id}")
+                raise HTTPException(
+                    status_code= status.HTTP_404_NOT_FOUND,
+                    detail="No businesses found for the given user ID."
+                )
+            business_list = []
+            for business in businesses:
+                business_id = business.id
+                emails = self.db.query(BusinessEmail).filter(BusinessEmail.business_id == business_id).all()
+                phones = self.db.query(BusinessPhone).filter(BusinessPhone.business_id == business_id).all()
+                socials = self.db.query(BusinessSocial).filter(BusinessSocial.business_id == business_id).all()
+                locations = self.db.query(BusinessLocation).filter(BusinessLocation.business_id == business_id).all()
+                email_dict = [BusinessEmailResponse.model_validate(p) for p in emails]
+                phones_dict = [BusinessPhoneResponse.model_validate(p) for p in phones]
+                socials_dict = [BusinessSocialResponse.model_validate(p) for p in socials]
+                locations_dict = [BusinessLocationResponse.model_validate(p) for p in locations]
+                business_response = {
+                    "id": business.id,
+                    "owner_id": business.owner_id,
+                    "name": business.name,
+                    "description": business.description,
+                    "phones": phones_dict,
+                    "emails": email_dict,
+                    "locations": locations_dict,
+                    "socials": socials_dict,
+                    "created_at": business.created_at,
+                    "updated_at": business.updated_at
+                }
+                business_list.append(business_response)
+
+            return business_list
+        except HTTPException as e:
+            logger.error(f"Error retrieving businesses for user ID {user_id}: {str(e)}")
+            raise e
+        except Exception as e:
+            logger.error(f"Unexpected error retrieving businesses for user ID {user_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred while retrieving businesses."
+            )

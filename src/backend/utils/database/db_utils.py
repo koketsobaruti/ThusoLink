@@ -1,5 +1,5 @@
 # src/backend/utils/db_utils.py
-from backend.models.business.service_model import BusinessService
+from ...models.business.service_model import BusinessService
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from fastapi import Depends

@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from src.backend.schemas.user.user_schema import UserLogin
 from fastapi import HTTPException, status
 from ...models.user.user_model import User
-from backend.utils.auth.hash_utils import verify_password
+from ...utils.auth.hash_utils import verify_password
 from ...utils.logger_utils import LoggerUtils
 logger = LoggerUtils.get_logger("Login Utils")
 class LoginUtils():

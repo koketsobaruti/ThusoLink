@@ -1,9 +1,9 @@
 # app/main.py
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
-# import settings
-from backend.config.config import settings
-
+# import settings from config folder in backend folder
+# from backend.config.config import settings
+from .backend.config.config import settings
 app = FastAPI()
 
 # Add session middleware
@@ -11,12 +11,9 @@ app = FastAPI()
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SECRET_KEY,
-    allow_origins=["http://localhost:5173", "http://localhost"],
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 # add routes
-from backend.routes import business, login, register, booking, services
+from .backend.routes import business, login, register, booking, services
 app.include_router(login.router, prefix="/api/auth/logins")
 app.include_router(register.router, prefix="/api/auth/registrations")
 app.include_router(business.router, prefix="/api/business")

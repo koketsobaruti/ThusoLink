@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends
-from backend.depends.dependencies import get_current_user
+from ..depends.dependencies import get_current_user
 from ..modules.auth.login_manager import LoginManager
 from ..schemas.user.user_schema import UserLogin
 from ..schemas.general_response import GeneralResponse

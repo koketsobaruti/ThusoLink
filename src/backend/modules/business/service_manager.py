@@ -1,9 +1,9 @@
 import datetime
 from fastapi import HTTPException, status
-from backend.models.business.service_model import BusinessService
-from backend.schemas.business.service_schema import BusinessServiceCreate, BusinessServiceListResponse, BusinessServiceResponse
-from backend.schemas.general_response import GeneralResponse
-from backend.utils.database.business_db_utils import BusinessDBUtils
+from ...models.business.service_model import BusinessService
+from ...schemas.business.service_schema import BusinessServiceCreate, BusinessServiceListResponse, BusinessServiceResponse
+from ...schemas.general_response import GeneralResponse
+from ...utils.database.business_db_utils import BusinessDBUtils
 from sqlalchemy.orm import Session
 from ...utils.logger_utils import LoggerUtils
 logger = LoggerUtils.get_logger("Service Manager")

@@ -1,5 +1,5 @@
-from backend.utils.database.business_db_utils import BusinessDBUtils
-from backend.utils.database.db_utils import DBUtils
+from ..utils.database.business_db_utils import BusinessDBUtils
+from ..utils.database.db_utils import DBUtils
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..utils.logger_utils import LoggerUtils
@@ -7,9 +7,9 @@ logger = LoggerUtils.get_logger("Services Routes")
 from ..database.connection import get_db
 # import business_manager
 # add service_schema.py
-import backend.schemas.business.service_schema as service_schema
+# from ..schemas.business.service_schema import service_schema
 # import servicemanager 
-from backend.modules.business.service_manager import ServiceManager
+from ..modules.business.service_manager import ServiceManager
 router = APIRouter(tags=["Services"])
 
 @router.post("/get-business-services")

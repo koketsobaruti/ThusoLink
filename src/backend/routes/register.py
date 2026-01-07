@@ -1,5 +1,5 @@
 # src/backend/routes/auth_routes.py
-from backend.schemas.business.service_schema import BusinessServiceCreate
+from ..schemas.business.service_schema import BusinessServiceCreate
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from ..utils.database.db_utils import DBUtils

@@ -1,8 +1,8 @@
-from backend.models.business.service_model import BusinessService
-from backend.schemas.business.service_schema import BusinessServiceCreate
+from ...models.business.service_model import BusinessService
+from ...schemas.business.service_schema import BusinessServiceCreate
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from backend.utils.auth.hash_utils import hash_password
+from ...utils.auth.hash_utils import hash_password
 from ...models.business.business_model import Business
 from ...utils.database.db_utils import DBUtils
 from ...schemas.user.user_schema import UserCreate, UserResponse

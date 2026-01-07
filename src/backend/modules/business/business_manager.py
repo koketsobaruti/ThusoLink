@@ -1,4 +1,4 @@
-from backend.utils.database.business_db_utils import BusinessDBUtils
+from ...utils.database.business_db_utils import BusinessDBUtils
 from sqlalchemy.orm import Session
 # import GeneralResponse schema
 from ...schemas.general_response import GeneralResponse
@@ -14,4 +14,11 @@ class BusinessManager:
             message="Business retrieved successfully",
             data= business
             )
-            
+    
+    def get_businesses_by_user(self, user_id: int):
+        businesses = self.db_utils.get_businesses_by_user(user_id)
+        return GeneralResponse( 
+            status= 200, 
+            message="User businesses retrieved successfully",
+            data= {"businesses": businesses}
+            )

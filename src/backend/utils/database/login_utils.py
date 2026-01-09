@@ -21,7 +21,8 @@ class LoginUtils():
         if not existing_user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password."
+                detail="Invalid email.",
+                headers={"WWW-Authenticate": "Bearer"}
             )
         
         logger.info(f"Verifying password for user: {user.email}")
@@ -30,7 +31,8 @@ class LoginUtils():
         if not correct_password:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid password."
+                detail="Invalid password.",
+                headers={"WWW-Authenticate": "Bearer"},
             )
         
         return None

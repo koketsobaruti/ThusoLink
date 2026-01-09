@@ -40,9 +40,6 @@ class UserBase(BaseModel):
     full_name: str = Field(..., min_length=2)
     email: Optional[EmailStr]
 
-# -------------------------
-# User creation model
-# -------------------------
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)

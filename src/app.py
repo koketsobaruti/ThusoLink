@@ -1,10 +1,24 @@
 # app/main.py
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 # import settings from config folder in backend folder
 # from backend.config.config import settings
 from .backend.config.config import settings
 app = FastAPI()
+# Add CORS
+origins = [
+    "http://localhost:3000",  # React/Lovable frontend URL
+    "http://127.0.0.1:3000",  # Optional alternative
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Or ["*"] for development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Add session middleware
 # app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)

@@ -46,11 +46,6 @@ class RegistrationManager:
             return GeneralResponse(status=status.HTTP_201_CREATED,
                                    message="User registered successfully"
                                    )
-        # ({
-            #     "status": "success",
-            #     "message": "User registered successfully",
-            #     "user": UserResponse.model_validate(new_user)
-            # })     
 
         except Exception as e:
             self.db.rollback()

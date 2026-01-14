@@ -35,4 +35,15 @@ class LoginUtils():
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        return None
+        return existing_user.id
+    
+    def get_user_id(self, user) -> int:
+        user_db = self.db.query(User).filter(User.email == user.email).first()
+        if user_db:
+            return user_db.id
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found.",
+                headers={"WWW-Authenticate": "Bearer"}
+            )

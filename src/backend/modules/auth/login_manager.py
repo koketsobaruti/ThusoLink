@@ -17,9 +17,12 @@ class LoginManager:
 
     def login_user(self, user:UserLogin) -> GeneralResponse:
         try:
+            
             # Check if the input is valid and return the user ID if it is
             user_id = self.db_utils.check_auth(user)
-
+            if not user_id:
+                logger.warning(f"Failed login attempt for email: {user.email}")
+            logger.info(f"User ID {user_id} authenticated successfully.")
             access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
             access_token = create_access_token(subject=user_id, expires_delta=access_token_expires)
             refresh_token = create_refresh_token(subject=user_id)

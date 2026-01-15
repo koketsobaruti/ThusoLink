@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 from ..utils.logger_utils import LoggerUtils
 logger = LoggerUtils.get_logger("Auth Routes")
 from ..database.connection import get_db
-from ..depends.dependencies import get_current_user
+from ..auth.jwt_bearer import get_current_user
 # import business_manager
+from ..auth.jwt_bearer import get_current_user
 from ..modules.business.business_manager import BusinessManager
 router = APIRouter(tags=["Business"])
 # DB = Session = Depends(get_db)
@@ -24,9 +25,7 @@ async def get_business_info(name: str, DB: Session = Depends(get_db)):
 @router.post("/get-user-businesses")
 async def get_user_businesses(DB: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     logger.info("Get user businesses endpoint called")
-    email = current_user['username']
-    db_utils = DBUtils(DB)
-    user_id = db_utils.get_current_user_id(email)
+    user_id = current_user.id
     business_manager = BusinessManager(DB)
     response = business_manager.get_businesses_by_user(user_id)
     return response

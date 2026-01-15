@@ -1,5 +1,6 @@
 # app/auth/jwt_bearer.py
 from datetime import datetime
+from click import UUID
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -7,10 +8,14 @@ from pydantic import ValidationError
 from typing import Optional, List
 from ..schemas.token_response import TokenPayload
 from ..config.config import settings
-from auth.jwt_handler import decode_token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+from .jwt_handler import decode_token
+from ..models.user.user_model import User
+from ..database.connection import get_db
+from sqlalchemy.orm import Session
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenPayload:
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/logins/token")
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> TokenPayload:
     try:
         payload = decode_token(token)
         token_data = TokenPayload(**payload)
@@ -21,7 +26,17 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenPayload:
                 detail="Token has expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        return token_data.sub
+        # check type of token
+        user_id = UUID(token_data.sub)
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        return user
     except (JWTError, ValidationError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

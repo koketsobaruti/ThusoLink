@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional, List
+import uuid
 from jose import jwt
 from ..config.config import settings
-
 def create_access_token(
     subject: str, expires_delta: Optional[timedelta] = None
 ) -> str:
@@ -17,6 +17,8 @@ def create_access_token(
         "sub": str(subject),
         "exp": expire,
         "iat": datetime.now(),
+        "jti": str(uuid.uuid4()),  # ✅ Add unique token ID
+        "token_type": "access"
         # "roles": roles
     }
     encoded_jwt = jwt.encode(
@@ -34,6 +36,7 @@ def create_refresh_token(subject: str) -> str:
         "sub": str(subject),
         "exp": expire,
         "iat": datetime.now(),
+        "jti": str(uuid.uuid4()),
         "token_type": "refresh"
     }
     encoded_jwt = jwt.encode(

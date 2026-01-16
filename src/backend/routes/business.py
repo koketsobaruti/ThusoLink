@@ -7,16 +7,18 @@ from sqlalchemy.orm import Session
 from ..utils.logger_utils import LoggerUtils
 logger = LoggerUtils.get_logger("Auth Routes")
 from ..database.connection import get_db
-from ..depends.dependencies import get_current_user
-# import business_manager
+from ..auth.jwt_bearer import get_current_user
 from ..modules.business.business_manager import BusinessManager
 router = APIRouter(tags=["Business"])
 # DB = Session = Depends(get_db)
 # db_utils = DBUtils(DB)
 
 @router.post("/get-business-info")
-async def get_business_info(name: str, DB: Session = Depends(get_db)):
-    logger.info("Get business info endpoint called")
+async def get_business_info(name: str, DB: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    current_user_id = current_user.id
+    if not current_user_id:
+        logger.error("Unauthorized access attempt to get business info")
+        return {"status": 401, "message": "Unauthorized"}
     business_manager = BusinessManager(DB)
     response = business_manager.get_business_by_name(name)
     return response
@@ -24,9 +26,7 @@ async def get_business_info(name: str, DB: Session = Depends(get_db)):
 @router.post("/get-user-businesses")
 async def get_user_businesses(DB: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     logger.info("Get user businesses endpoint called")
-    email = current_user['username']
-    db_utils = DBUtils(DB)
-    user_id = db_utils.get_current_user_id(email)
+    user_id = current_user.id
     business_manager = BusinessManager(DB)
     response = business_manager.get_businesses_by_user(user_id)
     return response

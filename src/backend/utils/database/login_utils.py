@@ -3,6 +3,8 @@ from src.backend.schemas.user.user_schema import UserLogin
 from fastapi import HTTPException, status
 from ...models.user.user_model import User
 from ...utils.auth.hash_utils import verify_password
+from ...models.auth.token_blacklist import TokenBlacklist
+
 from ...utils.logger_utils import LoggerUtils
 logger = LoggerUtils.get_logger("Login Utils")
 class LoginUtils():
@@ -38,6 +40,7 @@ class LoginUtils():
         return existing_user.id
     
     def get_user_id(self, user) -> int:
+
         user_db = self.db.query(User).filter(User.email == user.email).first()
         if user_db:
             return user_db.id
@@ -47,3 +50,6 @@ class LoginUtils():
                 detail="User not found.",
                 headers={"WWW-Authenticate": "Bearer"}
             )
+    def add_blacklisted_token(self, blacklisted_token: TokenBlacklist) -> None:
+        self.db.add(blacklisted_token)
+        self.db.commit()

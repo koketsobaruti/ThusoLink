@@ -16,7 +16,7 @@ logger = logging.getLogger("thusolink-backend.routes.login")
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/logins")
 # Login
-@router.post("/token")
+@router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)):
 

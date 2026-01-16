@@ -14,7 +14,7 @@ from ..database.connection import get_db
 from sqlalchemy.orm import Session
 from ..models.auth.token_blacklist import TokenBlacklist
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/logins/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/logins/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> TokenPayload:
     try:

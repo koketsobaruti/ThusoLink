@@ -8,25 +8,24 @@ from fastapi.middleware.cors import CORSMiddleware
 # # import logger utils
 from .backend.utils.logger_utils import LoggerUtils
 logger = LoggerUtils.get_logger("Main App")
-from .backend.tasks.scheduler import start_scheduler, shutdown_scheduler
+# from .backend.tasks.scheduler import start_scheduler, shutdown_scheduler
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Lifespan events for startup and shutdown
-    """
-    # Startup
-    logger.info("🚀 Starting application...")
-    start_scheduler()  # ✅ Start background scheduler
-    yield
-    # Shutdown
-    logger.info("👋 Shutting down application...")
-    shutdown_scheduler()  # ✅ Stop scheduler gracefully
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     """
+#     Lifespan events for startup and shutdown
+#     """
+#     # Startup
+#     logger.info("🚀 Starting application...")
+#     start_scheduler()  # ✅ Start background scheduler
+#     yield
+#     # Shutdown
+#     logger.info("👋 Shutting down application...")
+#     shutdown_scheduler()  # ✅ Stop scheduler gracefully
 from .backend.config.config import settings
 app = FastAPI(
     title="ThusoLink Booking API",
-    version="1.0.0",
-    lifespan=lifespan  # ✅ Use lifespan context manager
+    version="1.0.0" # ✅ Use lifespan context manager
 )
 
 
@@ -56,7 +55,7 @@ app.include_router(login.router, prefix="/api/auth/logins")
 app.include_router(register.router, prefix="/api/auth/registrations")
 app.include_router(business.router, prefix="/api/business")
 app.include_router(services.router, prefix="/api/services")
-app.include_router(admin.router, prefix="/api/admin")
+# app.include_router(admin.router, prefix="/api/admin")
 # app.include_router(booking.router, prefix="/api/bookings")
 
 # Simple health check route

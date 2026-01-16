@@ -55,8 +55,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(),
 
 # Logout
 @router.post("/logout")
-async def logout(request: Request):
-    request.session.pop("user", None)
+async def logout(current_user: User = Depends(get_current_user), token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)):
+
+    login_manager = LoginManager(db)
+    login_manager.logout_user(token, current_user.id)
+    
+        
     return {"message": "Logged out"}
 
 # Protected route

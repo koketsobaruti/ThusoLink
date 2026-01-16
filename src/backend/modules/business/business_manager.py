@@ -8,6 +8,7 @@ class BusinessManager:
         self.db_utils = BusinessDBUtils(self.db)
 
     def get_business_by_name(self, name: str):
+        
         business = self.db_utils.get_business_by_name(name)
         return GeneralResponse( 
             status= 200, 

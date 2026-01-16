@@ -12,6 +12,7 @@ from .jwt_handler import decode_token
 from ..models.user.user_model import User
 from ..database.connection import get_db
 from sqlalchemy.orm import Session
+from ..models.auth.token_blacklist import TokenBlacklist
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/logins/token")
 
@@ -26,6 +27,19 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
                 detail="Token has expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+         # ✅ Check if token is blacklisted
+        jti = payload.get("jti")
+        if jti:
+            is_blacklisted = db.query(TokenBlacklist).filter(
+                TokenBlacklist.jti == jti
+            ).first()
+            
+            if is_blacklisted:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token has been revoked. Please login again.",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
         # check type of token
         user_id = UUID(token_data.sub)
         user = db.query(User).filter(User.id == user_id).first()

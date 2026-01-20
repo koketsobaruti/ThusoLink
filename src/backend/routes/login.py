@@ -35,12 +35,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(),
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    token_data = response.data["token_response"]
-    # Return in OAuth2 format (what Swagger expects)
-    return {
-        "access_token": token_data.access_token,
-        "token_type": "bearer"
-    }
+    return response
 # @router.post("/login")
 # async def login_2(request: Request, user_login: UserLogin, db: Session = Depends(get_db))-> GeneralResponse:
 #     # Check credentials (e.g., query DB)

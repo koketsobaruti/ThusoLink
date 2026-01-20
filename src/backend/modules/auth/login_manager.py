@@ -32,10 +32,13 @@ class LoginManager:
                 refresh_token=refresh_token,
                 token_type="bearer"
             )
+             
             return GeneralResponse(
                 status=200,
                 message="User logged in successfully",
-                data={"token_response": token_response}
+                data={"access_token": token_response.access_token,
+                      "refresh_token": token_response.refresh_token,
+                      "token_type": "bearer"}
             )
         except HTTPException as e:
             raise  

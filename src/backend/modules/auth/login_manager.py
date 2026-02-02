@@ -36,9 +36,7 @@ class LoginManager:
             return GeneralResponse(
                 status=200,
                 message="User logged in successfully",
-                data={"access_token": token_response.access_token,
-                      "refresh_token": token_response.refresh_token,
-                      "token_type": "bearer"}
+                data={"token_response":token_response}
             )
         except HTTPException as e:
             raise  

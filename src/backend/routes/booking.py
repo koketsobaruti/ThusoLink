@@ -1,29 +1,42 @@
-# from datetime import datetime
-# from backend.depends.dependencies import get_current_user
-# from backend.schemas.business.bookings_schema import BookingBase
-# from fastapi import APIRouter, Depends
-# from pydantic import BaseModel
-# from ..utils.logger_utils import LoggerUtils
-# logger = LoggerUtils.get_logger("Auth Routes")
+from datetime import date, datetime
+import uuid
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from ..auth.jwt_bearer import get_current_user, get_current_active_user, oauth2_scheme
+from ..utils.logger_utils import LoggerUtils
+from ..schemas.business.schedule_schema import SetAvailabilityRequest
+from ..models.user.user_model import User
+from ..modules.business.schedule_manager import ScheduleManager
+from ..database.connection import get_db
+from sqlalchemy.orm import Session
+logger = LoggerUtils.get_logger("Auth Routes")
 
-# router = APIRouter(tags=["Bookings"])
+router = APIRouter(tags=["Bookings"])
 
-# class BookingRequest(BaseModel):
-#     booking_time: datetime  # ISO 8601 datetime, e.g., "2025-12-05T16:00:00"
-
-# @router.post("/user/create_booking")
-# def create_booking(booking: BookingBase, current_user: dict = Depends(get_current_user)):
-
-
-# @router.post("/owner/set_slots")
-# def set_available_slots(request: SetAvailabilityRequest):
-#     slots = []
-#     for slot in request.slots:
-#         slot_datetime = datetime.combine(slot.day, time(slot.hour))
-#         slots.append(slot_datetime)
+@router.post("/owner/set_slots", dependencies=[Depends(oauth2_scheme)])
+async def set_available_slots(request: SetAvailabilityRequest, DB: Session = Depends(get_db), 
+                        current_user: User = Depends(get_current_user)):
+    schedule_manager = ScheduleManager(DB)
+    current_user_id = current_user.id
+    logger.info(f"Service ID {request.service_id} \n User ID {current_user_id}")
+    response = schedule_manager.set_service_availability(request.service_id, current_user_id, request.slots)
+    return response
+    # slots = []
+    # available_slots = {"service_id": uuid.uuid4(), "slots": []}
+    # for slot in request.slots:
+    #     # User can set multiple slots of time in one day
+    #     for date in slot.dates:
+    #         slot_date = datetime.strptime(date, "%Y-%m-%d").date()
+    #         slot_times = []
+    #         for hour in slot.hours:
+    #             # get time in 24hr format
+    #             slot_time = datetime.strptime(f"{hour}:00", "%H:%M").time()
+    #             slot_times.append(slot_time)
+    #         slot = Slot(date=slot_date, times=slot_times)
     
-#     available_slots[request.service_id] = slots
-#     return {"message": f"Available slots for service {request.service_id} updated.", "slots": slots}
+    #     slot_datetime = datetime.combine(slot.date, slot.times[0])  # Use first time in slot
+    #     slots.append(slot_datetime)
+    
 
 # @router.post("/bookings")
 # def create_booking(request: BookingRequest):

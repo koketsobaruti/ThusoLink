@@ -25,3 +25,5 @@ class BusinessService(Base):
     )
 
     business = relationship("Business", back_populates="services")
+    availability = relationship("ServiceAvailability", back_populates="service", cascade="all, delete-orphan")
+    

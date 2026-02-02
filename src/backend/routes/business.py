@@ -7,14 +7,15 @@ from sqlalchemy.orm import Session
 from ..utils.logger_utils import LoggerUtils
 logger = LoggerUtils.get_logger("Auth Routes")
 from ..database.connection import get_db
-from ..auth.jwt_bearer import get_current_user
+from ..auth.jwt_bearer import get_current_user, get_current_active_user
 from ..modules.business.business_manager import BusinessManager
 router = APIRouter(tags=["Business"])
 # DB = Session = Depends(get_db)
 # db_utils = DBUtils(DB)
 
 @router.post("/get-business-info")
-async def get_business_info(name: str, DB: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_business_info(name: str, DB: Session = Depends(get_db), 
+                            current_user: dict = Depends(get_current_active_user)):
     current_user_id = current_user.id
     if not current_user_id:
         logger.error("Unauthorized access attempt to get business info")

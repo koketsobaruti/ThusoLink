@@ -9,7 +9,7 @@ from backend.models.auth import token_blacklist
 from backend.models.user import user_model
 from backend.models.business import business_model
 from backend.models.business import service_model
-
+from backend.models.business import schedule_model
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

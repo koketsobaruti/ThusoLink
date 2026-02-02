@@ -50,13 +50,12 @@ app.add_middleware(
     secret_key=settings.SECRET_KEY,
 )
 # add routes
-from .backend.routes import business, login, register, admin, services
+from .backend.routes import business, login, register, admin, services, booking
 app.include_router(login.router, prefix="/api/auth/logins")
 app.include_router(register.router, prefix="/api/auth/registrations")
 app.include_router(business.router, prefix="/api/business")
 app.include_router(services.router, prefix="/api/services")
-# app.include_router(admin.router, prefix="/api/admin")
-# app.include_router(booking.router, prefix="/api/bookings")
+app.include_router(booking.router, prefix="/api/bookings")
 
 # Simple health check route
 @app.get("/")

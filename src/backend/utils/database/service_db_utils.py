@@ -1,0 +1,88 @@
+from click import UUID
+from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
+from typing import Union
+from ...utils.logger_utils import LoggerUtils
+from ...models.business.service_model import BusinessService
+from ...models.business.business_model import Business
+from sqlalchemy.exc import SQLAlchemyError
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from sqlalchemy import text
+
+logger = LoggerUtils.get_logger("Service DB Utils")
+class ServiceDBUtils:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def get_service_by_id(self, service_id: int) -> Union[dict, None]:
+        try:
+            service = self.db.execute(
+                "SELECT * FROM services WHERE id = :service_id",
+                {"service_id": service_id}
+            ).fetchone()
+            if service:
+                return dict(service)
+            return None
+        except Exception as e:
+            logger.error(f"Error fetching service by ID {service_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error while fetching service.",
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+        
+    def verify_service_ownership(self, service_id, owner_id) -> bool:
+        try:
+            logger.info(f"Service ID {service_id} \n User ID {owner_id}")
+            service = (self.db.query(BusinessService).join(Business).filter(BusinessService.id == service_id,
+                                                                    Business.owner_id == owner_id).first())
+
+            if not service:
+                logger.warning(f"Ownership verification failed for service ID {service_id} and owner ID {owner_id}")
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"User does not own service",
+                    headers={"WWW-Authenticate": "Bearer"}
+                )
+
+        except Exception as e:
+            logger.error(f"Error verifying ownership for service ID {service_id} and owner ID {owner_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error while verifying service ownership.",
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+        
+    def save_availability(self, results, table_name: str, id_column: str, column_name:str) -> None:
+        
+        if not results.get("batch_data"):
+            return 
+        logger.info(f"Batch Data: {results.get("batch_data")}")
+        id = UUID(id_column)
+
+        query = f"""
+            INSERT INTO {table_name}
+            (id, {column_name}, date, start_time, end_time, availability_status)
+            VALUES (:schedule_id, :id, :date, :start_time, :end_time, :availability_status)
+        """
+
+        try:
+
+            self.db.execute(text(query), results["batch_data"])
+            self.db.commit()
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to persist availability slots : {e}.",
+            )
+
+        output = {
+            "inserted_count": len(results["valid_slots"]),
+            "failed_count": len(results["failed"]),
+            "inserted": results["valid_slots"],
+            "failed": results["failed"],
+        }
+        logger.info(output)
+
+    

@@ -35,7 +35,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(),
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    return response
+    return response.data["token_response"]
 # @router.post("/login")
 # async def login_2(request: Request, user_login: UserLogin, db: Session = Depends(get_db))-> GeneralResponse:
 #     # Check credentials (e.g., query DB)

@@ -13,12 +13,29 @@ from ..models.user.user_model import User
 from ..database.connection import get_db
 from sqlalchemy.orm import Session
 from ..models.auth.token_blacklist import TokenBlacklist
-
+# import logger
+from ..utils.logger_utils import LoggerUtils
+logger = LoggerUtils.get_logger("JWT Bearer")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/logins/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> TokenPayload:
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No token provided",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    logger.info(f"Token: {token}")
     try:
-        payload = decode_token(token)
+        try:
+            payload = decode_token(token)
+        except JWTError as e:
+            logger.error(f"Payload error: {token}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid token: {e}",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         token_data = TokenPayload(**payload)
         # check token expiration
         if datetime.fromtimestamp(token_data.exp) < datetime.now():
@@ -27,19 +44,19 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
                 detail="Token has expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-         # ✅ Check if token is blacklisted
-        jti = payload.get("jti")
-        if jti:
-            is_blacklisted = db.query(TokenBlacklist).filter(
-                TokenBlacklist.jti == jti
-            ).first()
+        #  # ✅ Check if token is blacklisted
+        # jti = payload.get("jti")
+        # if jti:
+        #     is_blacklisted = db.query(TokenBlacklist).filter(
+        #         TokenBlacklist.jti == jti
+        #     ).first()
             
-            if is_blacklisted:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token has been revoked. Please login again.",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
+        #     if is_blacklisted:
+        #         raise HTTPException(
+        #             status_code=status.HTTP_401_UNAUTHORIZED,
+        #             detail="Token has been revoked. Please login again.",
+        #             headers={"WWW-Authenticate": "Bearer"},
+        #         )
         # check type of token
         user_id = UUID(token_data.sub)
         user = db.query(User).filter(User.id == user_id).first()
@@ -51,10 +68,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             )
         
         return user
-    except (JWTError, ValidationError):
+    except (JWTError, ValidationError) as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+            detail=f"Could not validate credentials {e}",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

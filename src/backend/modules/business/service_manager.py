@@ -4,6 +4,7 @@ from ...models.business.service_model import BusinessService
 from ...schemas.business.service_schema import BusinessServiceCreate, BusinessServiceListResponse, BusinessServiceResponse
 from ...schemas.general_response import GeneralResponse
 from ...utils.database.business_db_utils import BusinessDBUtils
+from ...utils.database.service_db_utils import ServiceDBUtils
 from sqlalchemy.orm import Session
 from ...utils.logger_utils import LoggerUtils
 logger = LoggerUtils.get_logger("Service Manager")
@@ -31,5 +32,7 @@ class ServiceManager:
             logger.error(f"Error getting all services for business {business_name}: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"An error occurred: {str(e)}"
+                detail=f"An error occurred: {str(e)}",
+                headers={"WWW-Authenticate": "Bearer"}
             )
+        

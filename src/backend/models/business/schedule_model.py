@@ -1,0 +1,55 @@
+# create the sqlalchemy models for schedule
+from sqlalchemy import Enum
+import uuid
+from sqlalchemy import (Column, Integer, ForeignKey, Date, Time, CheckConstraint)
+from sqlalchemy.dialects.postgresql import UUID     
+from sqlalchemy.orm import relationship
+from ...database.connection import Base
+from ...schemas.business.schedule_schema import AvailabilityStatus
+
+class ServiceAvailability(Base):
+    __tablename__ = "service_availability"
+    __table_args__ = (
+            CheckConstraint("end_time >= start_time", name="ck_business_valid_time_range"),
+            {"extend_existing": True},
+        )
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    service_id = Column(UUID(as_uuid=True), ForeignKey("business_services.id", ondelete="CASCADE"), nullable=False)
+
+
+    date = Column(Date, nullable=False)
+    start_time = Column(Time(timezone=True), nullable=False)
+    end_time = Column(Time(timezone=True), nullable=False)
+
+    availability_status = Column(
+        Enum(AvailabilityStatus, name="availability_status_enum"),
+        nullable=False,
+        default=AvailabilityStatus.AVAILABLE
+    )
+    service = relationship("BusinessService", back_populates="availability")
+
+class BusinessAvailability(Base):
+    __tablename__ = "business_availability"
+    __table_args__ = (
+        CheckConstraint("end_time >= start_time", name="ck_business_valid_time_range"),
+        {"extend_existing": True},
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    business_id = Column(UUID(as_uuid=True),
+        ForeignKey("business.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    date = Column(Date, nullable=False)
+    start_time = Column(Time(timezone=True), nullable=False)
+    end_time = Column(Time(timezone=True), nullable=False)
+
+    availability_status = Column(
+        Enum(AvailabilityStatus, name="availability_status_enum"),
+        nullable=False,
+        default=AvailabilityStatus.AVAILABLE
+    )
+
+    business = relationship("Business", back_populates="availability")

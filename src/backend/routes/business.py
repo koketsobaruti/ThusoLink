@@ -13,7 +13,7 @@ router = APIRouter(tags=["Business"])
 # DB = Session = Depends(get_db)
 # db_utils = DBUtils(DB)
 
-@router.post("/get-business-info")
+@router.get("/get-business-info")
 async def get_business_info(name: str, DB: Session = Depends(get_db), 
                             current_user: dict = Depends(get_current_active_user)):
     current_user_id = current_user.id
@@ -24,7 +24,7 @@ async def get_business_info(name: str, DB: Session = Depends(get_db),
     response = business_manager.get_business_by_name(name)
     return response
 
-@router.post("/get-user-businesses")
+@router.get("/get-user-businesses")
 async def get_user_businesses(DB: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     logger.info("Get user businesses endpoint called")
     user_id = current_user.id

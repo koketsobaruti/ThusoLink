@@ -12,7 +12,7 @@ from ..database.connection import get_db
 from ..modules.business.service_manager import ServiceManager
 router = APIRouter(tags=["Services"])
 
-@router.post("/get-business-services")
+@router.get("/get-business-services")
 async def get_business_services(business_name: str, DB: Session = Depends(get_db)):
     logger.info("Get business services endpoint called")
     service_manager = ServiceManager(DB)

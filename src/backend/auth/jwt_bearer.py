@@ -25,7 +25,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             detail="No token provided",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    logger.info(f"Token: {token}")
+    # logger.info(f"Token: {token}")
     try:
         try:
             payload = decode_token(token)

@@ -30,6 +30,8 @@ class ServiceAvailability(Base):
         default=AvailabilityStatus.AVAILABLE
     )
     service = relationship("BusinessService", back_populates="availability")
+    bookings = relationship("ServiceBooking", back_populates="booking_availability", cascade="all, delete-orphan")
+
 
 class BusinessAvailability(Base):
     __tablename__ = "business_availability"
@@ -57,3 +59,24 @@ class BusinessAvailability(Base):
     )
 
     business = relationship("Business", back_populates="availability")
+    bookings = relationship("BusinessBooking", back_populates="booking_availability", cascade="all, delete-orphan")
+
+# class StaffAvailability(Base):
+#     __tablename__ = "staff_availability"
+#     __table_args__ = (
+#         CheckConstraint("end_time >= start_time", name="ck_staff_valid_time_range"),
+#         UniqueConstraint("staff_id", "date", "start_time", "end_time", name="uq_staff_date"),
+#     )
+
+#     fk_field = "staff_id"
+#     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+#     staff_id = Column(UUID(as_uuid=True), nullable=False)
+#     date = Column(Date, nullable=False)
+#     start_time = Column(Time(timezone=True), nullable=False)
+#     end_time = Column(Time(timezone=True), nullable=False)
+#     availability_status = Column(Enum(AvailabilityStatus, name="availability_status_enum"),
+#             nullable=False,
+#             default=AvailabilityStatus.AVAILABLE
+#         )
+    
+#     # staff = relationship("Staff", back_populates="availability")

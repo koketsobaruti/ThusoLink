@@ -2,48 +2,58 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime, timezone, date, time
+from enum import Enum
+from .schedule_schema import AvailabilityType
+class BookingStatus(str, Enum):
+    REQUESTED = "requested"
+    ACCEPTED = "accepted"
+    CANCELLED = "cancelled"
+    COMPLETE = "complete"
 
-class BookingStatus(str):
-    confirmed = "confirmed"
-    cancelled = "cancelled"
-    pending = "pending"
-
-# ------------------- Base Schemas -------------------
-class BookingBase(BaseModel):
-    service_id: UUID
-    
-    booking_date: date
-    booking_time: time  
+class BookingRequest(BaseModel):
+    availability_type: AvailabilityType
+    availability_id: str
+    customization: Optional[str] = None
     notes: Optional[str] = None
+    # inspiration_images: Optional[List[str]] = None
 
-# ------------------- Create Schemas -------------------
-class BookingCreate(BookingBase):
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-# ------------------- Update Schemas -------------------
-class BookingUpdate(BaseModel):
-    booking_date: Optional[date] = None
-    booking_time: Optional[time] = None
+class BookingResponse(BaseModel):
+    id: str
+    availability_type: str
+    availability_id: str
+    customer_id: str
+    date: str
+    start_time: str
+    end_time: str
+    availability_status: str
+    customization: Optional[str] = None
     notes: Optional[str] = None
-    status: Optional[BookingStatus] = None
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-# ------------------- Response Schemas -------------------
-class BookingResponse(BookingBase):
-    id: UUID
+    # inspiration_images: Optional[List[str]] = None
     status: BookingStatus
-    created_at: datetime
-    updated_at: Optional[datetime]
 
-    class Config:
-        orm_mode = True
+class WhatsAppBookingDetails(BaseModel):
+    booking_id: str
+    customer_name: str
+    slot_date: date
+    slot_start_time: time
+    slot_end_time: time
+    provider_name: str
+    provider_whatsapp_number: str
+    customization: Optional[str] = None
+    notes: Optional[str] = None
+    # inspiration_images: Optional[List[str]] = None
+    status: str
 
-# ------------------- Bulk Slots (for owner) -------------------
-class BookingSlot(BaseModel):
-    booking_date: date
-    booking_time: time
+class BookingType(str, Enum):
+    SERVICE = "service"
+    BUSINESS = "business"
+    STAFF = "staff"
+    
+class BookingUpdate(str, Enum):
+    booking_type = BookingType
+    booking_id: str
 
-class SetAvailabilityRequest(BaseModel):
-    service_id: UUID
-    slots: List[BookingSlot]
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+class WhatsappBookingPayLoad(BaseModel):
+    message_text: str
+    booking_id: str
+    to_number: str

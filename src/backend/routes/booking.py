@@ -1,6 +1,7 @@
 from datetime import date, datetime
+from typing import Any, Dict
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Request, HTTPException, status, BackgroundTasks
 from pydantic import BaseModel
 from ..schemas.business.schedule_schema import AvailabilityFilter
 from ..auth.jwt_bearer import get_current_user, get_current_active_user, oauth2_scheme
@@ -9,6 +10,8 @@ from ..schemas.business.schedule_schema import SetAvailabilityRequest
 from ..models.user.user_model import User
 from ..models.business.schedule_model import ServiceAvailability, BusinessAvailability
 from ..modules.business.schedule_manager import ScheduleManager
+from ..modules.business.booking_manager import BookingManager
+from ..schemas.business.bookings_schema import BookingRequest, BookingType, BookingUpdate
 from ..database.connection import get_db
 from sqlalchemy.orm import Session
 logger = LoggerUtils.get_logger("Auth Routes")
@@ -50,7 +53,56 @@ async def get_availability_by_filter(filter: AvailabilityFilter, DB: Session = D
     response = schedule_manager.get_availability_by_filter(filter)
     return response
 
+@router.post("/request-booking")
+async def request_booking(request: BookingRequest,
+                          background_tasks: BackgroundTasks,
+                         db: Session = Depends(get_db),
+                         user=Depends(get_current_user)):
 
+    manager = BookingManager(db)
+
+    result = manager.request_booking(
+        booking_request=request,
+        customer_id=user.id
+    )
+    # schedule async whatsapp notification
+    background_tasks.add_task(
+        manager.notify_owner_whatsapp,
+        result.data["booking"]
+    )
+    return result
+
+@router.post("/webhook")
+async def whatsapp_webhook(request: Request, db: Session = Depends(get_current_user)):
+    payload: Dict[str, Any] = await request.json()
+    logger.info(f"Received WhatsApp webhook payload: {payload}")
+    try:
+        entry = payload.get("entry", [])[0]
+        changes = entry[0].get("changes", [])
+        value = changes[0].get("value", {})
+        messages = value.get("messages")
+
+        if not messages:
+            logger.info("No messages found in the webhook payload.")
+            return {"message": "Webhook received successfully, but no messages to process."}
+        message = messages[0]
+        if message.get("type") != "interactive":
+            return {"status": "not_interactive"}
+        
+        button_id = message["interactive"]["button_reply"]["id"]
+        # Process the button_id to update booking status
+        booking_manager = BookingManager(db)
+        if button_id.startswith("accept_"):
+            booking_id = button_id.split("accept_")[1]
+            
+            booking_manager.update_booking_status(BookingUpdate(
+                booking_type=BookingType.SERVICE,  # Adjust based on your logic
+                booking_id=booking_id,
+                status=BookingStatus.ACCEPTED.value
+            ), user_id=uuid.UUID("00000000-0000-0000-0000-000000000000"))  # Replace with actual user ID
+    # Process the payload and update booking status accordingly
+    # You would need to implement logic here to parse the payload and update the booking in your database
+    return {"message": "Webhook received successfully"}
 # @router.post("/update-booking-info")
 # async def update_booking_info():
 #     logger.info("Update booking  info endpoint called")

@@ -1,8 +1,10 @@
 # app/main.py
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from .backend.config.config import Settings
 # import settings from config folder in backend folder
 # from backend.config.config import settings
 # # import logger utils
@@ -22,6 +24,7 @@ logger = LoggerUtils.get_logger("Main App")
 #     # Shutdown
 #     logger.info("👋 Shutting down application...")
 #     shutdown_scheduler()  # ✅ Stop scheduler gracefully
+settings = Settings()  # Load settings at module level
 from .backend.config.config import settings
 app = FastAPI(
     title="ThusoLink Booking API",
@@ -65,3 +68,14 @@ def root():
 @app.get("/api/auth")
 def auth_root():
     return {"message": "Auth endpoint"}
+
+@app.get("/webhook")
+async def verify(request: Request):
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+
+    if mode == "subscribe" and token == settings.VERIFY_TOKEN:
+        return PlainTextResponse(challenge)
+
+    return PlainTextResponse("Forbidden", status_code=403)

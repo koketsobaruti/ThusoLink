@@ -23,6 +23,7 @@ dependencies = [
     "python-multipart (>=0.0.21,<0.0.22)",
     "apscheduler (>=3.11.2,<4.0.0)",
     "redis (>=7.1.0,<8.0.0)",
+    "aiohttp[speedups] (>=3.13.3,<4.0.0)",
 ]
 
 

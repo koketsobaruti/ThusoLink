@@ -106,6 +106,17 @@ class DBUtils:
             )
         return user_obj.id
     
+    def get_current_username(self, customer_id):
+        customer = self.db.query(User).filter(User.id == customer_id).first()
+        if not customer:
+            logger.error(f"Customer not found in DB for ID: {customer_id}")
+            raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Customer not found."
+                )
+            
+        return customer
+        
     def get_business_id(self, business_name: str) -> str:
         logger.info(f"Fetching business ID for business name: {business_name}")
         business_obj = self.db.query(Business).filter(Business.name == business_name).first()

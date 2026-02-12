@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from ..schemas.business.schedule_schema import AvailabilityFilter
 from ..auth.jwt_bearer import get_current_user, get_current_active_user, oauth2_scheme
 from ..utils.logger_utils import LoggerUtils
-from ..schemas.business.schedule_schema import SetAvailabilityRequest
+from ..schemas.business.schedule_schema import SetAvailabilityRequest, AvailabilityRequest
 from ..models.user.user_model import User
 from ..models.business.schedule_model import ServiceAvailability, BusinessAvailability
 from ..modules.business.schedule_manager import ScheduleManager
@@ -27,6 +27,13 @@ async def set_service_availablility_slots(request: SetAvailabilityRequest, DB: S
     response = schedule_manager.set_service_availability(request.item_id, current_user_id, request.slots)
     return response
 
+@router.post("/owner/set_availability", dependencies=[Depends(oauth2_scheme)])
+async def set_availability_slots(request: AvailabilityRequest, DB: Session = Depends(get_db),
+                        current_user: User = Depends(get_current_user)):
+    schedule_manager = ScheduleManager(DB)
+    current_user_id = current_user.id
+    logger.info(f"Record ID {request.item_id} \n User ID {current_user_id}")
+    response = schedule_manager.set_service_availability(request, current_user_id)
 # @router.get("/get_service_availability", dependencies=[Depends(oauth2_scheme)])
 # async def get_service_availailablility(service_id: str, DB: Session = Depends(get_db)):
 #     schedule_manager = ScheduleManager(DB)
@@ -72,37 +79,37 @@ async def request_booking(request: BookingRequest,
     )
     return result
 
-@router.post("/webhook")
-async def whatsapp_webhook(request: Request, db: Session = Depends(get_current_user)):
-    payload: Dict[str, Any] = await request.json()
-    logger.info(f"Received WhatsApp webhook payload: {payload}")
-    try:
-        entry = payload.get("entry", [])[0]
-        changes = entry[0].get("changes", [])
-        value = changes[0].get("value", {})
-        messages = value.get("messages")
+# @router.post("/webhook")
+# async def whatsapp_webhook(request: Request, db: Session = Depends(get_current_user)):
+#     payload: Dict[str, Any] = await request.json()
+#     logger.info(f"Received WhatsApp webhook payload: {payload}")
+#     try:
+#         entry = payload.get("entry", [])[0]
+#         changes = entry[0].get("changes", [])
+#         value = changes[0].get("value", {})
+#         messages = value.get("messages")
 
-        if not messages:
-            logger.info("No messages found in the webhook payload.")
-            return {"message": "Webhook received successfully, but no messages to process."}
-        message = messages[0]
-        if message.get("type") != "interactive":
-            return {"status": "not_interactive"}
+#         if not messages:
+#             logger.info("No messages found in the webhook payload.")
+#             return {"message": "Webhook received successfully, but no messages to process."}
+#         message = messages[0]
+#         if message.get("type") != "interactive":
+#             return {"status": "not_interactive"}
         
-        button_id = message["interactive"]["button_reply"]["id"]
-        # Process the button_id to update booking status
-        booking_manager = BookingManager(db)
-        if button_id.startswith("accept_"):
-            booking_id = button_id.split("accept_")[1]
+#         button_id = message["interactive"]["button_reply"]["id"]
+#         # Process the button_id to update booking status
+#         booking_manager = BookingManager(db)
+#         if button_id.startswith("accept_"):
+#             booking_id = button_id.split("accept_")[1]
             
-            booking_manager.update_booking_status(BookingUpdate(
-                booking_type=BookingType.SERVICE,  # Adjust based on your logic
-                booking_id=booking_id,
-                status=BookingStatus.ACCEPTED.value
-            ), user_id=uuid.UUID("00000000-0000-0000-0000-000000000000"))  # Replace with actual user ID
-    # Process the payload and update booking status accordingly
-    # You would need to implement logic here to parse the payload and update the booking in your database
-    return {"message": "Webhook received successfully"}
+#             booking_manager.update_booking_status(BookingUpdate(
+#                 booking_type=BookingType.SERVICE,  # Adjust based on your logic
+#                 booking_id=booking_id,
+#                 status=BookingStatus.ACCEPTED.value
+#             ), user_id=uuid.UUID("00000000-0000-0000-0000-000000000000"))  # Replace with actual user ID
+#     # Process the payload and update booking status accordingly
+#     # You would need to implement logic here to parse the payload and update the booking in your database
+#     return {"message": "Webhook received successfully"}
 # @router.post("/update-booking-info")
 # async def update_booking_info():
 #     logger.info("Update booking  info endpoint called")

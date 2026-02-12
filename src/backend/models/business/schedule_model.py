@@ -6,6 +6,27 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from ...database.connection import Base
 from ...schemas.business.schedule_schema import AvailabilityStatus
+from ...schemas.business.bookings_schema import BookingStatus, BookingType
+class Availability(Base):
+    __tablename__ = "availability"
+    __table_args__ = (
+        CheckConstraint("end_time >= start_time", name="ck_valid_time_range"),
+        UniqueConstraint('record_id', 'date', 'start_time', 'end_time', name='uq_record_date'),
+        {"extend_existing": True},
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    record_id = Column(UUID(as_uuid=True), nullable=False)  # can join dynamically
+    date = Column(Date, nullable=False)
+    start_time = Column(Time(timezone=True), nullable=False)
+    end_time = Column(Time(timezone=True), nullable=False)
+
+    availability_status = Column(
+        Enum(AvailabilityStatus, name="availability_status_enum"),
+        nullable=False,
+        default=AvailabilityStatus.AVAILABLE
+    )
+    availabiliity_type = Column(BookingType, nullable=False, name = "availability_type_enum")
 
 class ServiceAvailability(Base):
     __tablename__ = "service_availability"

@@ -10,12 +10,21 @@ class AvailabilityStatus(str, enum.Enum):
     BOOKED = "booked"
     COMPLETED = "completed"
 
+class AvailabilityType(str, enum.Enum):
+    BUSINESS = "business"
+    SERVICE = "service"
+    EMPLOYEE = "employee"
+
 class AvailabilitySlot(BaseModel):
     date: date
     start_time: time
     end_time: Optional[time] = None
     availability_status: Optional[AvailabilityStatus] = None
 
+class AvailabilityRequest(BaseModel):
+    record_id:str
+    request_type:AvailabilityType
+    slots: List[AvailabilitySlot]
 
 class SetAvailabilityRequest(BaseModel):
     item_id: str
@@ -25,10 +34,7 @@ class GetByAvailabilityStatus(BaseModel):
     item_id: str
     availability_status: str = None
 
-class AvailabilityType(str, enum.Enum):
-    BUSINESS = "business"
-    SERVICE = "service"
-    EMPLOYEE = "employee"
+
 
 class AvailabilityFilter(BaseModel):
     availability_type: AvailabilityType  # "business", "service", "employee"

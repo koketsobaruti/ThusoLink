@@ -22,11 +22,12 @@ def check_availability_input(id, slots):
             try:
                 batch_data = [{
                     "schedule_id": uuid4(),
-                    "id": id,
+                    "record_id": id,
                     "date": r["slot"].date,
                     "start_time": r["slot"].start_time,
                     "end_time": getattr(r["slot"], "end_time", r["slot"].start_time),
-                    "availability_status": r["slot"].availability_status.name
+                    "availability_status": r["slot"].availability_status.name,
+                    "availabiliity_type": r["slot"].availabiliity_type.name
                 } for r in valid_slots]
                 results = {"batch_data":batch_data,
                             "failed": failed,

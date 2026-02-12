@@ -2,7 +2,7 @@ import uuid
 from sqlalchemy import Column, String, Date, Time, Enum as SQLEnum, ForeignKey, Text, CheckConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from ...schemas.business.bookings_schema import BookingStatus
+from ...schemas.business.bookings_schema import BookingStatus, BookingType
 from ...database.connection import Base
 
 class ServiceBooking(Base):
@@ -32,3 +32,17 @@ class BusinessBooking(Base):
 
     booking_availability = relationship("BusinessAvailability", back_populates="bookings")  # generic relationship; for joins dynamically, use the model
     user = relationship("User", back_populates="business_bookings")
+
+
+class Booking(Base):
+    __tablename__ = "booking"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    availability_id = Column(UUID(as_uuid=True), nullable=False)  # can join dynamically
+    customer_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    customization = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    # inspiration_images = Column(Text, nullable=True)  # JSON string of URLs
+    status = Column(SQLEnum(BookingStatus, name="booking_status_enum"), default=BookingStatus.REQUESTED)
+    booking_type = Column(SQLEnum(BookingType, name="booking_type_enum"), nullable=False)
+    user = relationship("User", back_populates="bookings")

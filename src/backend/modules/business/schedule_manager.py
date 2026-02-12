@@ -5,20 +5,53 @@ from fastapi import HTTPException, status
 from ...models.business.service_model import BusinessService
 from ...schemas.business.service_schema import BusinessServiceCreate, BusinessServiceListResponse, BusinessServiceResponse
 from ...schemas.general_response import GeneralResponse
+from ...schemas.business.schedule_schema import SetAvailabilityRequest
 from ...utils.database.db_utils import DBUtils
 from ...utils.availability_utils import check_availability_input
-from ...schemas.business.schedule_schema import AvailabilityFilter, AvailabilityResponse
+from ...schemas.business.schedule_schema import AvailabilityFilter, AvailabilityResponse, AvailabilityRequest
 from ...utils.database.service_db_utils import ServiceDBUtils
 from sqlalchemy.orm import Session
-from ...config.availability_map import AVAILABILITY_MAP
+from ...config.availability_map import AVAILABILITY_CHECK_MAP, AVAILABILITY_MAP
 from ...utils.logger_utils import LoggerUtils
+from ...utils.database.availability_db_utils import AvailabilityDBUtils
 logger = LoggerUtils.get_logger("Schedule Manager")
 class ScheduleManager:
     def __init__(self, db: Session):
         self.db = db
         self.service_db_utils = ServiceDBUtils(self.db)
         self.general_db_utils = DBUtils(self.db)
+        self.availability_db_utils = AvailabilityDBUtils(self.db)
+        
+    def set_availability(self, request: AvailabilityRequest, owner_id: str) -> GeneralResponse:
+        try:
+            if request is None or owner_id is None:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Missing required fields: availability_type, record_id, owner_id, and slots are all required.")
+            if request.availability_type.value not in AVAILABILITY_CHECK_MAP:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail=f"Invalid availability type: {request.availability_type}. Must be one of {list(AVAILABILITY_CHECK_MAP.keys())}.")
+            if not request.slots or not isinstance(request.slots, list):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Slots must be a non-empty list of availability slots.")
+            
+            # Verify ownership of the record (service/business) for which availability is being set
+            ownership_check_func = AVAILABILITY_CHECK_MAP[request.availability_type.value]
+            ownership_check_func(request.record_id, owner_id)
 
+            # Validate slots and prepare data for insertion
+            results = check_availability_input(id=request.record_id, slots=request.slots)
+            # Save validated slots to the database
+            
+            self.availability_db_utils.save_availability(results=results)
+            return GeneralResponse(
+                status=status.HTTP_200_OK,
+                message="Availability slots set successfully",
+                data={"record_id": request.record_id, "slots": request.slots})
+        
+        except HTTPException as e:
+            self.db.rollback()
+            logger.error(f"Error setting availability: {str(e)}")
+            raise e
     def set_service_availability(self, service_id, owner_id, slots: list[dict]) -> GeneralResponse:
         try:
             # Verify service ownership

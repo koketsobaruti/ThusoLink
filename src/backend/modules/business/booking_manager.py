@@ -41,7 +41,7 @@ class BookingManager:
             # Update slot to REQUESTED
             slot = self.booking_db_utils.fetch_slot(AvailabilityModel=AvailabilityModel, availability_id=booking_request.availability_id)
             
-            created_booking = self.booking_db_utils.create_booking(BookingModel=BookingModel,booking_request=booking_request, slot=slot, customer_id=customer_id)
+            created_booking = self.booking_db_utils.create_request_booking(BookingModel=BookingModel,booking_request=booking_request, slot=slot, customer_id=customer_id)
             # map created booking to response schema
             
             # Build and return the API response with the booking

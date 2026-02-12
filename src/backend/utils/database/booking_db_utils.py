@@ -51,7 +51,7 @@ class BookingDBUtils:
                 customization=booking_request.customization,
                 notes=booking_request.notes,
                 # inspiration_images=booking_request.inspiration_images,
-                status=BookingStatus.REQUESTED,
+                status=BookingStatus.ACCEPTED,
                 booking_type=booking_request.availability_type.value
             )
             try:
@@ -120,7 +120,7 @@ class BookingDBUtils:
             detail=f"Error checking slot existence: {str(e)}"
             )
     
-    def create_booking(self, BookingModel, slot, customer_id, booking_request: BookingRequest):
+    def create_request_booking(self, BookingModel, slot, customer_id, booking_request: BookingRequest):
         try:
             new_booking = BookingModel(
                 availability_id=slot.id,

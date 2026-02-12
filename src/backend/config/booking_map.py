@@ -8,10 +8,10 @@ from ..models.business.booking_model import (
     BusinessBooking
     # StaffAvailability,
 )
-BOOKING_REGISTRY = {
-    "service": (ServiceBooking, ServiceAvailability),
-    "business": (BusinessBooking, BusinessAvailability)
-    }
+# BOOKING_REGISTRY = {
+#     "service": (ServiceBooking, ServiceAvailability),
+#     "business": (BusinessBooking, BusinessAvailability)
+#     }
 BOOKING_REGISTRY = {
     "business": {
         "booking_model": BusinessBooking,

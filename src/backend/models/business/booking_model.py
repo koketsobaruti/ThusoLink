@@ -43,6 +43,5 @@ class Booking(Base):
     customization = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
     # inspiration_images = Column(Text, nullable=True)  # JSON string of URLs
-    status = Column(SQLEnum(BookingStatus, name="booking_status_enum"), default=BookingStatus.REQUESTED)
+    status = Column(SQLEnum(BookingStatus, name="booking_enum"), default=BookingStatus.REQUESTED)
     booking_type = Column(SQLEnum(BookingType, name="booking_type_enum"), nullable=False)
-    user = relationship("User", back_populates="bookings")

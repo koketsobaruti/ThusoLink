@@ -22,11 +22,11 @@ class Availability(Base):
     end_time = Column(Time(timezone=True), nullable=False)
 
     availability_status = Column(
-        Enum(AvailabilityStatus, name="availability_status_enum"),
+        Enum(AvailabilityStatus, name="availability_enum"),
         nullable=False,
         default=AvailabilityStatus.AVAILABLE
     )
-    availabiliity_type = Column(BookingType, nullable=False, name = "availability_type_enum")
+    availabiliity_type = Column(Enum(BookingType, name = "availability_type_enum"), nullable=False)
 
 class ServiceAvailability(Base):
     __tablename__ = "service_availability"

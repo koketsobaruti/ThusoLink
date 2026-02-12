@@ -29,7 +29,7 @@ class BookingManager:
         self.booking_db_utils = BookingDBUtils(self.db)
         self.whatsapp_service = WhatsAppService()
 
-    def request_booking(self, booking_request: BookingRequest, customer_id: UUID)-> GeneralResponse:
+    def create_booking_request(self, booking_request: BookingRequest, customer_id: UUID)-> GeneralResponse:
         try:
             # Get the model for this type
             if booking_request.availability_type.value not in AVAILABILITY_MAP:
@@ -58,7 +58,32 @@ class BookingManager:
                 headers={"WWW-Authenticate": "Bearer"}
             )
         
-    
+    def request_booking(self, booking_request: BookingRequest, customer_id: str)-> GeneralResponse:
+        try:
+            if booking_request is None or customer_id is None or booking_request.availability_id is None or booking_request.availability_type is None:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Missing required fields: availability_type, availability_id, and customer_id are all required.")
+            
+            # Get the model for this type
+            if booking_request.availability_type.value not in AVAILABILITY_MAP:
+                raise HTTPException(status_code=400, detail="Invalid availability type")
+            # Update slot to REQUESTED
+            slot = self.booking_db_utils.get_slot(availability_id=booking_request.availability_id)
+            
+            created_booking = self.booking_db_utils.save_booking(slot=slot, customer_id=customer_id, booking_request=booking_request)
+            # Build and return the API response with the booking
+            return GeneralResponse(
+                status=status.HTTP_200_OK,
+                message="Booking requested successfully",
+                data={"booking": created_booking}
+                )
+        except Exception as e:
+            logger.error(f"Error reacting a booking request: {str(e)}")    
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"An error occurred: {str(e)}",
+                headers={"WWW-Authenticate": "Bearer"}
+            )  
     def get_whatsapp_booking_details(self, booking):
         try:
             customer = self.general_db_utils.get_current_username(booking.customer_id)
@@ -66,13 +91,14 @@ class BookingManager:
 
             results = self.booking_db_utils.get_provider_and_phone(booking=booking)
             provider= results.get("provider")
+            name = provider.get("name")
             # logger.info(f"Provider details for booking {booking.id}: {provider}")
             whatsapp_booking_details = WhatsAppBookingDetails(booking_id=str(booking.id),
                                                             customer_name=customer.full_name,
                                                             slot_date=booking.date,
                                                             slot_start_time=booking.start_time,
                                                             slot_end_time=booking.end_time,
-                                                            provider_name=provider.name,
+                                                            provider_name=name,
                                                             provider_whatsapp_number=results["phone"],
                                                             customization=booking.customization,
                                                             notes=booking.notes,
@@ -119,14 +145,13 @@ class BookingManager:
             message_text = self.build_whatsapp_message(details)
             # logger.info(f"Whatsapp message for booking {booking.id}: \n {message_text}")
             await self.whatsapp_service.send_booking_request(
-                booking=booking,
+                booking=details,
                 message_text=message_text
             )
         except Exception as e:
             logger.error(f"Failed to send WhatsApp message: {e}")
     def update_booking_status(self, booking_id:str):
-        try:
-            get_booking = self.booking_db_utils.get_booking_by_id(booking_id)
+        pass
     # def update_booking_status(self, bookingUpdate: BookingUpdate, user_id: UUID) -> GeneralResponse:
     #     try:
     #         bookingModel = BOOKING_REGISTRY[bookingUpdate.availability_type.value]["booking_model"]

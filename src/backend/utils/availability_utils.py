@@ -3,10 +3,15 @@ from uuid import uuid4
 
 from fastapi import HTTPException, status
 from ..utils.logger_utils import LoggerUtils
+from ..schemas.business.schedule_schema import AvailabilityRequest
+from ..schemas.business.bookings_schema import BookingType
 logger = LoggerUtils.get_logger("Schedule Manager")
 
-def check_availability_input(id, slots):
+def check_availability_input(request: AvailabilityRequest):
+    try:
         failed = []
+        slots = request.slots 
+        id = request.record_id
         # Validate slots in parallel
         results = []
         with ThreadPoolExecutor(max_workers=5) as executor:
@@ -21,13 +26,14 @@ def check_availability_input(id, slots):
         if valid_slots:
             try:
                 batch_data = [{
-                    "schedule_id": uuid4(),
+                    "id": uuid4(),
                     "record_id": id,
                     "date": r["slot"].date,
                     "start_time": r["slot"].start_time,
                     "end_time": getattr(r["slot"], "end_time", r["slot"].start_time),
-                    "availability_status": r["slot"].availability_status.name,
-                    "availabiliity_type": r["slot"].availabiliity_type.name
+                    # set availability status to AVAILABLE by default, can be updated later based on bookings
+                    "availability_status": r["slot"].availability_status.name if r["slot"].availability_status else "AVAILABLE",
+                    "availabiliity_type": BookingType(request.request_type.value).name
                 } for r in valid_slots]
                 results = {"batch_data":batch_data,
                             "failed": failed,
@@ -36,10 +42,16 @@ def check_availability_input(id, slots):
             except HTTPException as e: 
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                     detail=f"Failed to persist availability slots {e}.")
+    except Exception as e: 
+        logger.error(f"Unexpected error during availability validation: {e}")
+        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"An unexpected error occurred during availability validation: {e}")
 
 def validate_and_insert_slot(idx, slot):
     try:
-        if slot.start_time > slot.end_time:
+        if slot.end_time is None:
+            slot.end_time = slot.start_time
+        elif slot.start_time > slot.end_time:
             logger.warning(f"Invalid slot time: start_time {slot.start_time} is after end_time {slot.end_time}")
             raise ValueError("Invalid slot time: start_time must be before end_time.")
         return {"index": idx,

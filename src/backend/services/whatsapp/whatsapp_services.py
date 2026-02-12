@@ -13,8 +13,8 @@ class WhatsAppService:
         self.settings = Settings()
         # self.base_url = f"https://graph.facebook.com/{self.settings.VERSION}"
 
-    async def send_booking_request(self, booking, message_text):
-
+    async def send_booking_request(self, booking: WhatsAppBookingDetails, message_text):
+        try:
         # phone_number_id = self.settings.WHATSAPP_PHONE_NUMBER_ID
         # # url = f"{self.base_url}/{phone_number_id}/messages"
 
@@ -26,16 +26,19 @@ class WhatsAppService:
         #     "Content-Type": "application/json"
         # }
 
-        whatsapp_payload = WhatsappBookingPayLoad(
-            message_text=message_text,      
-            booking_id=booking.id,
-            to_number=self.settings.RECIPIENT_WAID
-        )
-        data = messages.booking_action_buttons(whatsapp_payload)
-        response = await client.WhatsAppClient().send(payload=data)
-        if response:
-            logger.info(f"WhatsApp message sent successfully for booking {booking.id}")
-            logger.info(f"Response: {response}")
+            whatsapp_payload = WhatsappBookingPayLoad(
+                message_text=message_text,      
+                booking_id=booking.booking_id,
+                to_number=self.settings.RECIPIENT_WAID
+            )
+            data = messages.booking_action_buttons(whatsapp_payload)
+            response = await client.WhatsAppClient().send(payload=data)
+            if response:
+                logger.info(f"WhatsApp message sent successfully for booking {booking.booking_id}")
+                logger.info(f"Response: {response}")
+        except Exception as e: 
+            logger.error(f"Error sending WhatsApp message: {str(e)}")
+            raise httpx.RequestError(f"Failed to send WhatsApp message: {str(e)}")
         # try:
         #     response = await client.WhatsAppClient().send(payload = data)
         #     # async with httpx.AsyncClient(timeout=30.0) as client:

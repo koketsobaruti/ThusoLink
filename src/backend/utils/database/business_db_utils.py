@@ -1,3 +1,4 @@
+from os import name
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Union
@@ -9,6 +10,51 @@ class BusinessDBUtils:
     def __init__(self, db: Session):
         self.db = db
 
+    def get_business_by_id(self, business_id: str):
+        """
+        Retrieve a BusinessEmail, BusinessPhone, BusinessSocial, Business by its name.
+        """
+        try:
+            business = self.db.query(Business).filter(Business.id == business_id).first()
+            if not business:
+                logger.warning(f"Business not found: {business_id}")
+                raise HTTPException(
+                    status_code= status.HTTP_404_NOT_FOUND,
+                    detail="Business not found."
+                )
+            # get BusinessEmail, BusinessPhone, BusinessSocial where business_id matches
+            emails = self.db.query(BusinessEmail).filter(BusinessEmail.business_id == business_id).all()
+            phones = self.db.query(BusinessPhone).filter(BusinessPhone.business_id == business_id).all()
+            socials = self.db.query(BusinessSocial).filter(BusinessSocial.business_id == business_id).all()
+            locations = self.db.query(BusinessLocation).filter(BusinessLocation.business_id == business_id).all()
+            email_dict = [BusinessEmailResponse.model_validate(p) for p in emails]
+            phones_dict = [BusinessPhoneResponse.model_validate(p) for p in phones]
+            socials_dict = [BusinessSocialResponse.model_validate(p) for p in socials]
+            locations_dict = [BusinessLocationResponse.model_validate(p) for p in locations]
+            # logger.info(f'Emails retrieved for business {name}: {email_dict}')
+            business_response = {
+                "id": business.id,
+                "owner_id": business.owner_id,
+                "name": business.name,
+                "description": business.description,
+                "phones": phones_dict,
+                "emails": email_dict,
+                "locations": locations_dict,
+                "socials": socials_dict,
+                "created_at": business.created_at,
+                "updated_at": business.updated_at
+            }
+
+            return business_response
+        except HTTPException as e:
+            logger.error(f"Error retrieving business by name: {name} - {str(e)}")
+            raise e
+        except Exception as e:
+            logger.error(f"Unexpected error retrieving business by name: {name} - {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred while retrieving the business."
+            )
     def get_business_by_name(self, name: str):
         """
         Retrieve a BusinessEmail, BusinessPhone, BusinessSocial, Business by its name.

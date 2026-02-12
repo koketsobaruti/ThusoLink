@@ -21,27 +21,30 @@ class ScheduleManager:
         self.service_db_utils = ServiceDBUtils(self.db)
         self.general_db_utils = DBUtils(self.db)
         self.availability_db_utils = AvailabilityDBUtils(self.db)
-        
-    def set_availability(self, request: AvailabilityRequest, owner_id: str) -> GeneralResponse:
+        self.availability_check_map = {"service": self.service_db_utils.verify_service_ownership,
+                                        "business": self.general_db_utils.user_business_exists}
+                
+    def set_availability(self, request: AvailabilityRequest, user_id: str) -> GeneralResponse:
         try:
-            if request is None or owner_id is None:
+            if request is None or user_id is None:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail="Missing required fields: availability_type, record_id, owner_id, and slots are all required.")
-            if request.availability_type.value not in AVAILABILITY_CHECK_MAP:
+                                    detail="Missing required fields: availability_type, record_id, user_id, and slots are all required.")
+            if request.request_type.value not in self.availability_check_map:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail=f"Invalid availability type: {request.availability_type}. Must be one of {list(AVAILABILITY_CHECK_MAP.keys())}.")
+                                    detail=f"Invalid availability type: {request.request_type}. Must be one of {list(self.availability_check_map.keys())}.")
             if not request.slots or not isinstance(request.slots, list):
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                     detail="Slots must be a non-empty list of availability slots.")
             
             # Verify ownership of the record (service/business) for which availability is being set
-            ownership_check_func = AVAILABILITY_CHECK_MAP[request.availability_type.value]
-            ownership_check_func(request.record_id, owner_id)
+            ownership_check_func = self.availability_check_map[request.request_type.value]
+            ownership_check_func(request.record_id, user_id)
 
             # Validate slots and prepare data for insertion
-            results = check_availability_input(id=request.record_id, slots=request.slots)
+            results = check_availability_input(request=request)
             # Save validated slots to the database
-            
+            if not results:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No valid availability slots to save.")
             self.availability_db_utils.save_availability(results=results)
             return GeneralResponse(
                 status=status.HTTP_200_OK,

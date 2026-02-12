@@ -18,9 +18,9 @@ class AvailabilityDBUtils:
 
             query = f"""
             INSERT INTO availability
-            (schedule_id, record_id, date, start_time, end_time, availability_status, availabiliity_type)
-            VALUES (:schedule_id,:record_id, :date, :start_time, :end_time, :availability_status, :availabiliity_type)
-            ON CONFLICT (record_id, date, start_time, end_time, availabiliity_type) DO NOTHING
+            (id, record_id, date, start_time, end_time, availability_status, availabiliity_type)
+            VALUES (:id,:record_id, :date, :start_time, :end_time, :availability_status, :availabiliity_type)
+            ON CONFLICT (record_id, date, start_time, end_time) DO NOTHING
             """
 
             try:

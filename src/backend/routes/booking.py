@@ -18,6 +18,15 @@ logger = LoggerUtils.get_logger("Auth Routes")
 
 router = APIRouter(tags=["Bookings"])
 
+@router.post("/owner/set_availability", dependencies=[Depends(oauth2_scheme)])
+async def set_availability_slots(request: AvailabilityRequest, DB: Session = Depends(get_db),
+                        current_user: User = Depends(get_current_user)):
+    schedule_manager = ScheduleManager(DB)
+    current_user_id = current_user.id
+    logger.info(f"Record ID {request.record_id} \n User ID {current_user_id}")
+    response = schedule_manager.set_availability(request, current_user_id)
+    return response
+
 @router.post("/owner/set_service_slots", dependencies=[Depends(oauth2_scheme)])
 async def set_service_availablility_slots(request: SetAvailabilityRequest, DB: Session = Depends(get_db), 
                         current_user: User = Depends(get_current_user)):
@@ -27,13 +36,6 @@ async def set_service_availablility_slots(request: SetAvailabilityRequest, DB: S
     response = schedule_manager.set_service_availability(request.item_id, current_user_id, request.slots)
     return response
 
-@router.post("/owner/set_availability", dependencies=[Depends(oauth2_scheme)])
-async def set_availability_slots(request: AvailabilityRequest, DB: Session = Depends(get_db),
-                        current_user: User = Depends(get_current_user)):
-    schedule_manager = ScheduleManager(DB)
-    current_user_id = current_user.id
-    logger.info(f"Record ID {request.item_id} \n User ID {current_user_id}")
-    response = schedule_manager.set_service_availability(request, current_user_id)
 # @router.get("/get_service_availability", dependencies=[Depends(oauth2_scheme)])
 # async def get_service_availailablility(service_id: str, DB: Session = Depends(get_db)):
 #     schedule_manager = ScheduleManager(DB)

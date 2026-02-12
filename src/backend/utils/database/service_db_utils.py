@@ -87,14 +87,14 @@ class ServiceDBUtils:
             raise
         
         
-    def verify_service_ownership(self, service_id, owner_id) -> bool:
+    def verify_service_ownership(self, service_id, user_id) -> bool:
         try:
-            logger.info(f"Service ID {service_id} \n User ID {owner_id}")
+            logger.info(f"Service ID {service_id} \n User ID {user_id}")
             service = (self.db.query(BusinessService).join(Business).filter(BusinessService.id == service_id,
-                                                                    Business.owner_id == owner_id).first())
+                                                                    Business.owner_id == user_id).first())
 
             if not service:
-                logger.warning(f"Ownership verification failed for service ID {service_id} and owner ID {owner_id}")
+                logger.warning(f"Ownership verification failed for service ID {service_id} and user ID {user_id}")
                 raise HTTPException(
                     status_code=403,
                     detail=f"User does not own service",
@@ -102,7 +102,7 @@ class ServiceDBUtils:
                 )
 
         except Exception as e:
-            logger.error(f"Error verifying ownership for service ID {service_id} and owner ID {owner_id}: {e}")
+            logger.error(f"Error verifying ownership for service ID {service_id} and user ID {user_id}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error while verifying service ownership.",

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from typing import Union
@@ -45,6 +46,7 @@ class BookingDBUtils:
         
     def save_booking(self, slot, customer_id, booking_request: BookingRequest):
         try:
+            timestamp = datetime.now(timezone.utc)
             new_booking = Booking(
                 availability_id=slot.id,
                 customer_id=customer_id,
@@ -52,7 +54,9 @@ class BookingDBUtils:
                 notes=booking_request.notes,
                 # inspiration_images=booking_request.inspiration_images,
                 status=BookingStatus.ACCEPTED,
-                booking_type=booking_request.availability_type.value
+                booking_type=booking_request.availability_type.value,
+                created_at=timestamp,
+                updated_at=timestamp
             )
             try:
                 self.db.add(new_booking)
@@ -295,5 +299,26 @@ class BookingDBUtils:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"An error occurred: {str(e)}",
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+        
+    def get_bookings(self, record_id, column_name, vals):
+        try:
+            query = f"""SELECT * FROM booking B 
+                    JOIN availability A ON B.availability_id = A.id 
+                    WHERE A.record_id=:record_id 
+                    AND A.{column_name} IN :value"""
+            bookings = self.db.execute( text(query), {"record_id": record_id, "value": tuple(vals)}).fetchall()
+            logger.info(f"Bookings: {bookings}")
+            # if not bookings:
+            #     logger.info(f"No bookings found for record ID {record_id} with column {column_name} and values {vals}")
+            #     raise
+
+            return [dict(row._mapping) for row in bookings] if bookings else []
+        except Exception as e:
+            logger.error(f"Error fetching bookings: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Internal server error while fetching bookings for {record_id}.",
                 headers={"WWW-Authenticate": "Bearer"}
             )

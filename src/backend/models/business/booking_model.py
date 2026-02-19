@@ -1,7 +1,8 @@
 import uuid
-from sqlalchemy import Column, String, Date, Time, Enum as SQLEnum, ForeignKey, Text, CheckConstraint, UniqueConstraint
+from sqlalchemy import Column,DateTime, String, Date, Time, Enum as SQLEnum, ForeignKey, Text, CheckConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+from datetime import datetime, timezone
 from ...schemas.business.bookings_schema import BookingStatus, BookingType
 from ...database.connection import Base
 
@@ -45,3 +46,9 @@ class Booking(Base):
     # inspiration_images = Column(Text, nullable=True)  # JSON string of URLs
     status = Column(SQLEnum(BookingStatus, name="booking_enum"), default=BookingStatus.REQUESTED)
     booking_type = Column(SQLEnum(BookingType, name="booking_type_enum"), nullable=False)
+    created_at = Column(DateTime(timezone=True))
+    updated_at = Column(
+        DateTime(timezone=True),  
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )

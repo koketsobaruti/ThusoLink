@@ -1,4 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+from time import timezone
 from uuid import uuid4
 
 from fastapi import HTTPException, status
@@ -25,6 +27,7 @@ def check_availability_input(request: AvailabilityRequest):
         logger.info(f"Valid data: {valid_slots}")
         if valid_slots:
             try:
+                timestamp = datetime.now(timezone.utc)
                 batch_data = [{
                     "id": uuid4(),
                     "record_id": id,
@@ -33,7 +36,9 @@ def check_availability_input(request: AvailabilityRequest):
                     "end_time": getattr(r["slot"], "end_time", r["slot"].start_time),
                     # set availability status to AVAILABLE by default, can be updated later based on bookings
                     "availability_status": r["slot"].availability_status.name if r["slot"].availability_status else "AVAILABLE",
-                    "availabiliity_type": BookingType(request.request_type.value).name
+                    "availabiliity_type": BookingType(request.request_type.value).name,
+                    "created_at": timestamp,
+                    "updated_at": timestamp,
                 } for r in valid_slots]
                 results = {"batch_data":batch_data,
                             "failed": failed,

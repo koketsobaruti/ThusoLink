@@ -1,10 +1,11 @@
 # create the sqlalchemy models for schedule
 from sqlalchemy import Enum
 import uuid
-from sqlalchemy import (Column, Integer, ForeignKey, Date, Time, CheckConstraint, UniqueConstraint)
+from sqlalchemy import (DateTime, Column, Integer, ForeignKey, Date, Time, CheckConstraint, UniqueConstraint)
 from sqlalchemy.dialects.postgresql import UUID     
 from sqlalchemy.orm import relationship
 from ...database.connection import Base
+from datetime import datetime, timezone
 from ...schemas.business.schedule_schema import AvailabilityStatus
 from ...schemas.business.bookings_schema import BookingStatus, BookingType
 class Availability(Base):
@@ -27,7 +28,28 @@ class Availability(Base):
         default=AvailabilityStatus.AVAILABLE
     )
     availabiliity_type = Column(Enum(BookingType, name = "availability_type_enum"), nullable=False)
+    created_at = Column(DateTime(timezone=True))
+    updated_at = Column(
+        DateTime(timezone=True),  
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+class OffDay(Base):
+    __tablename__ = "off_day"
+    __table_args__ = (
+        UniqueConstraint('record_id', 'date', name='uq_offday_record_date'),
+        {"extend_existing": True},
+    )
 
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    record_id = Column(UUID(as_uuid=True), nullable=False)  # can join dynamically
+    date = Column(Date, nullable=False)
+    created_at = Column(DateTime(timezone=True))
+    updated_at = Column(
+        DateTime(timezone=True),  
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 class ServiceAvailability(Base):
     __tablename__ = "service_availability"
     __table_args__ = (

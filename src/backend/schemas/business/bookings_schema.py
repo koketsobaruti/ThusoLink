@@ -4,11 +4,13 @@ from typing import Optional, List
 from datetime import datetime, timezone, date, time
 from enum import Enum
 from .schedule_schema import AvailabilityType
+
 class BookingStatus(str, Enum):
     REQUESTED = "requested"
     ACCEPTED = "accepted"
     CANCELLED = "cancelled"
     COMPLETE = "complete"
+    UNAVAILABLE = "unavailable"
 
 class BookingRequest(BaseModel):
     availability_type: AvailabilityType

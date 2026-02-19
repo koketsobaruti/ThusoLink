@@ -1,18 +1,23 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime
+from email.mime import text
 from uuid import uuid4
 from fastapi import HTTPException, status
+from httpx import request
 from ...models.business.service_model import BusinessService
 from ...schemas.business.service_schema import BusinessServiceCreate, BusinessServiceListResponse, BusinessServiceResponse
 from ...schemas.general_response import GeneralResponse
-from ...schemas.business.schedule_schema import SetAvailabilityRequest
+from ...schemas.business.schedule_schema import SetAvailabilityRequest, SetOffDay
 from ...utils.database.db_utils import DBUtils
+from ...schemas.business.bookings_schema import BookingStatus
 from ...utils.availability_utils import check_availability_input
-from ...schemas.business.schedule_schema import AvailabilityFilter, AvailabilityResponse, AvailabilityRequest
+from ...schemas.business.schedule_schema import AvailabilityFilter, AvailabilityResponse, AvailabilityRequest, AvailabilityStatus
 from ...utils.database.service_db_utils import ServiceDBUtils
+from ...models.business.schedule_model import Availability
 from sqlalchemy.orm import Session
 from ...config.availability_map import AVAILABILITY_CHECK_MAP, AVAILABILITY_MAP
 from ...utils.logger_utils import LoggerUtils
+from ...utils.database.booking_db_utils import BookingDBUtils 
 from ...utils.database.availability_db_utils import AvailabilityDBUtils
 logger = LoggerUtils.get_logger("Schedule Manager")
 class ScheduleManager:
@@ -21,6 +26,7 @@ class ScheduleManager:
         self.service_db_utils = ServiceDBUtils(self.db)
         self.general_db_utils = DBUtils(self.db)
         self.availability_db_utils = AvailabilityDBUtils(self.db)
+        self.booking_db_utils = BookingDBUtils(self.db)
         self.availability_check_map = {"service": self.service_db_utils.verify_service_ownership,
                                         "business": self.general_db_utils.user_business_exists}
                 
@@ -131,11 +137,11 @@ class ScheduleManager:
     def get_availability_by_filter(self, filters: AvailabilityFilter):
         try:
 
-            model, record_column = AVAILABILITY_MAP[filters.availability_type.value]
+            model, record_column_name = AVAILABILITY_MAP[filters.availability_type.value]
 
             # Fetch results from repo
             results = self.service_db_utils.get_availability_by_filter(model=model,
-                                                                       id_column=record_column,
+                                                                       id_column=record_column_name,
                                                                        filters=filters)
 
             if not results:
@@ -172,7 +178,76 @@ class ScheduleManager:
                 message="Internal server error while fetching availability",
                 data={"results": []}
             )
-    # WE HAVE MOVED THESE TO availability_utils file
+    
+    def set_off_day(self, request: SetOffDay, user_id: str) -> GeneralResponse:
+        try:
+            if request is None or user_id is None:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Missing required fields: record_id, user_id, and date are all required.")
+            if not request.off_dates or not isinstance(request.off_dates, list):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Date must be a non-empty list of dates.")
+            
+            # Verify ownership of the business for which off days are being set
+            # Verify ownership of the record (service/business) for which availability is being set
+            ownership_check_func = self.availability_check_map[request.request_type.value]
+            ownership_check_func(request.record_id, user_id)
+
+            # Save off days to the database
+            self.availability_db_utils.save_off_days(request=request)
+            return GeneralResponse(
+                status=status.HTTP_200_OK,
+                message="Off days set successfully",
+                data={"record_id": request.record_id, "dates": request.off_dates})
+        
+        except HTTPException as e:
+            self.db.rollback()
+            logger.error(f"Error setting off days: {str(e)}")
+            raise e
+        
+    def update_current_bookings(self, request: SetOffDay):
+        try:
+            booking_obj = self.booking_db_utils.get_bookings(
+                record_id=request.record_id,
+                column_name="date",
+                vals=request.off_dates
+            )
+
+            if not booking_obj:
+                logger.info("No bookings to update for off days")
+                return  # ✅ Normal case — just exit cleanly
+
+            self.availability_db_utils.update_booking_status(
+                booking_ids=[b["id"] for b in booking_obj],  # since you return dicts
+                status_value=BookingStatus.CANCELLED.value
+            )
+
+            logger.info("Updated bookings status for off days")
+
+        except HTTPException:
+            raise  # ✅ Do NOT convert intended HTTP errors into 500
+        except Exception as e:
+            logger.error(f"Error updating bookings for off days: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An error occurred while updating bookings for off days."
+            )
+    def update_avaialability_status(self, request: SetOffDay):
+        try:
+            availability_obj = self.availability_db_utils.get_availability(record_id=request.record_id, column_name="date", vals=request.off_dates) 
+            if not availability_obj:
+                logger.info("No availability to update for off days")
+                return  # ✅ Normal case — just exit cleanly
+
+            self.availability_db_utils.update_availability_status(availability_ids=[a["id"] for a in availability_obj], status_value= AvailabilityStatus.UNAVAILABLE.value)
+            logger.info("Updated availability status for off days")
+        except HTTPException:
+            raise  # ✅ Do NOT convert intended HTTP errors into 500
+        except Exception as e:
+            logger.error(f"Error updating availability for off days: {str(e)}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"An error occurred while updating availability for off days: {str(e)}")
+            # WE HAVE MOVED THESE TO availability_utils file
     # def check_availability_input(self, id, slots):
     #     failed = []
     #     # Validate slots in parallel

@@ -10,6 +10,10 @@ class AvailabilityStatus(str, enum.Enum):
     BOOKED = "booked"
     COMPLETED = "completed"
     UNAVAILABLE = "unavailable"
+    CANCELLED = "cancelled"
+    RESCHEDULED = "rescheduled"
+    EXPIRED = "expired"
+    
 
 class AvailabilityType(str, enum.Enum):
     BUSINESS = "business"

@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from ...schemas.business.bookings_schema import BookingStatus, BookingType
 from ...database.connection import Base
+from ...schemas.business.schedule_schema import AvailabilityStatus
 
 class ServiceBooking(Base):
     __tablename__ = "service_booking"
@@ -44,7 +45,7 @@ class Booking(Base):
     customization = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
     # inspiration_images = Column(Text, nullable=True)  # JSON string of URLs
-    status = Column(SQLEnum(BookingStatus, name="booking_enum"), default=BookingStatus.REQUESTED)
+    booking_status = Column(SQLEnum(AvailabilityStatus, name="booking_enum"), default=AvailabilityStatus.REQUESTED)
     booking_type = Column(SQLEnum(BookingType, name="booking_type_enum"), nullable=False)
     created_at = Column(DateTime(timezone=True))
     updated_at = Column(

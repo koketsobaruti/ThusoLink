@@ -234,7 +234,8 @@ class ScheduleManager:
             )
     def update_avaialability_status(self, request: SetOffDay):
         try:
-            availability_obj = self.availability_db_utils.get_availability(record_id=request.record_id, column_name="date", vals=request.off_dates) 
+            availability_obj = self.availability_db_utils.get_availability(record_id=request.record_id, 
+                                                                           column_name="date", vals=request.off_dates) 
             if not availability_obj:
                 logger.info("No availability to update for off days")
                 return  # ✅ Normal case — just exit cleanly

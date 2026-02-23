@@ -1,8 +1,6 @@
 from collections.abc import Iterable
-import datetime
-from datetime import datetime
+from datetime import datetime, timezone
 from pyexpat import model
-from time import timezone
 from uuid import UUID, uuid4
 from ...utils.logger_utils import LoggerUtils
 from sqlalchemy.orm import Session
@@ -65,14 +63,14 @@ class AvailabilityDBUtils:
             ON CONFLICT (record_id, date) DO NOTHING
             """
             batch_data = []
-            timestamp = datetime.now(timezone.utc)
+            created_at = updated_at = datetime.now(timezone.utc)
             for date in request.off_dates:
                 batch_data.append({
                     "id": uuid4(),
                     "record_id": request.record_id,
                     "date": date,
-                    "created_at": timestamp,
-                    "updated_at": timestamp
+                    "created_at": created_at,
+                    "updated_at": updated_at
                 })
             self.db.execute(text(query), batch_data)
             self.db.commit()

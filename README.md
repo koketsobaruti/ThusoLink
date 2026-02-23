@@ -11,6 +11,7 @@ ThusoLink is designed to:
 - Support future WhatsApp webhook integration
 - Provide a scalable backend architecture
 The goal is to create a lightweight but powerful scheduling infrastructure that works both with and without a dedicated mobile app
+
 ## Architecture
 ### Backend
 - FastAPI – API framework

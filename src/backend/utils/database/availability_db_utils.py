@@ -57,6 +57,7 @@ class AvailabilityDBUtils:
         
     def save_off_days(self, request):
         try:
+            logger.info(f"Saving off days for record_id: {request.record_id} and record: {request}")
             query = f"""
             INSERT INTO off_day
             (id, record_id, date, created_at, updated_at)

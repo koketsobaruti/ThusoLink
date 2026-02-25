@@ -3,7 +3,7 @@ import uuid
 from ...utils.database.booking_db_utils import BookingDBUtils
 from ...database.connection import get_db
 import pytest
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 db_gen = get_db()
 db = next(db_gen)
@@ -38,3 +38,14 @@ def test_get_bookings_with_all_values(setup_db):
                 "notes":"Customer prefers morning appointment",
                 "booking_type":"BUSINESS"}]
     assert actual == expected
+
+def test_get_bookings_with_no_record_id(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    booking_db_utils = BookingDBUtils(db=setup_db)
+    with pytest.raises(HTTPException) as exc_info:
+        booking_db_utils.get_bookings(record_id=None,
+                                            column_name="date",
+                                            vals=["2026-02-12"])
+    assert exc_info.value.status_code == 500
+    assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)

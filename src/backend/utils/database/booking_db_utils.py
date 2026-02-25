@@ -304,8 +304,8 @@ class BookingDBUtils:
         
     def get_bookings(self, record_id, column_name, vals):
         try:
-            query = f"""SELECT * FROM booking B 
-                    JOIN availability A ON B.availability_id = A.id 
+            query = f"""SELECT B.id, B.availability_id, B.customer_id, B.customization, B.notes, B.booking_type FROM booking B 
+                    LEFT JOIN availability A ON B.availability_id = A.id 
                     WHERE A.record_id=:record_id 
                     AND A.{column_name} IN :value"""
             bookings = self.db.execute( text(query), {"record_id": record_id, "value": tuple(vals)}).fetchall()

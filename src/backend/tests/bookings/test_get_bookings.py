@@ -1,0 +1,40 @@
+import uuid
+
+from ...utils.database.booking_db_utils import BookingDBUtils
+from ...database.connection import get_db
+import pytest
+from fastapi import Depends
+from sqlalchemy.orm import Session
+db_gen = get_db()
+db = next(db_gen)
+
+class BookingsTest:
+    record_id:str
+    column_name:str
+    vals:list
+
+@pytest.fixture(scope="module")
+def setup_db():
+    try:
+        db_gen = get_db()
+        db = next(db_gen)
+        yield db
+        db.close()
+    except Exception as e:
+        print(f"Error setting up database: {e}")
+        
+def test_get_bookings_with_all_values(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    booking_db_utils = BookingDBUtils(db=setup_db)
+    actual = booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+                                           column_name="date",
+                                           vals=["2026-02-12"])
+    print(f"Actual: {actual}")
+    expected = [{"id":uuid.UUID("30cadfdf-1828-4084-a82a-2b16481bbac2"),
+                "availability_id":uuid.UUID("aa6c4d3d-6895-4654-8e4d-2f4a50371856"),
+                "customer_id":uuid.UUID("5650122d-e6d7-4a51-b79b-b14b804e28e6"),
+                "customization":"Standard haircut",
+                "notes":"Customer prefers morning appointment",
+                "booking_type":"BUSINESS"}]
+    assert actual == expected

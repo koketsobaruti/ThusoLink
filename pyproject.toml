@@ -34,3 +34,8 @@ build-backend = "poetry.core.masonry.api"
 # 👇 Add this so Poetry knows your source is inside "src"
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.0.2,<10.0.0)"
+]

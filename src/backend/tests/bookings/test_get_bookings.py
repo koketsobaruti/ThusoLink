@@ -39,13 +39,117 @@ def test_get_bookings_with_all_values(setup_db):
                 "booking_type":"BUSINESS"}]
     assert actual == expected
 
-def test_get_bookings_with_no_record_id(setup_db):
+# def test_get_bookings_with_invalid_record_id(setup_db):
+#     if not setup_db:
+#         pytest.skip("Database connection could not be established.")
+#     booking_db_utils = BookingDBUtils(db=setup_db)
+#     with pytest.raises(HTTPException) as exc_info:
+#         booking_db_utils.get_bookings(record_id="invalid_record_id",
+#                                       column_name="date",
+#                                       vals=["2026-02-12"])
+#     assert exc_info.value.status_code == 500
+#     assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)
+
+# def test_get_bookings_with_invalid_column_name(setup_db):
+#     if not setup_db:
+#         pytest.skip("Database connection could not be established.")
+#     booking_db_utils = BookingDBUtils(db=setup_db)
+#     with pytest.raises(HTTPException) as exc_info:
+#         booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+#                                       column_name="invalid_column",
+#                                       vals=["2026-02-12"])
+#     assert exc_info.value.status_code == 500
+#     assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)
+
+# def test_get_bookings_with_invalid_vals(setup_db):
+#     if not setup_db:
+#         pytest.skip("Database connection could not be established.")
+#     booking_db_utils = BookingDBUtils(db=setup_db)
+#     with pytest.raises(HTTPException) as exc_info:
+#         booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+#                                       column_name="date",
+#                                       vals=["invalid_date"])
+#     assert exc_info.value.status_code == 500
+#     assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)
+
+def test_get_bookings_with_none_record_id(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    booking_db_utils = BookingDBUtils(db=setup_db)
+    with pytest.raises(ValueError) as exc_info:
+        booking_db_utils.get_bookings(record_id=None,
+                                      column_name="date",
+                                      vals=["2026-02-12"])
+    assert str(exc_info.value) == "Record ID, column name, and values must be provided"
+def test_get_bookings_with_none_column_name(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    booking_db_utils = BookingDBUtils(db=setup_db)
+    with pytest.raises(ValueError) as exc_info:
+        booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+                                      column_name=None,
+                                      vals=["2026-02-12"])
+    assert str(exc_info.value) == "Record ID, column name, and values must be provided"
+
+def test_get_bookings_with_none_vals(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    booking_db_utils = BookingDBUtils(db=setup_db)
+    with pytest.raises(ValueError) as exc_info:
+        booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+                                      column_name="date",
+                                      vals=None)
+    assert str(exc_info.value) == "Record ID, column name, and values must be provided"
+
+# def test_get_bookings_with_empty_vals(setup_db):
+#     if not setup_db:
+#         pytest.skip("Database connection could not be established.")
+#     booking_db_utils = BookingDBUtils(db=setup_db)
+#     with pytest.raises(HTTPException) as exc_info:
+#         booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+#                                       column_name="date",
+#                                       vals=[])
+#     assert exc_info.value.status_code == 500
+#     assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)
+
+# def test_get_bookings_with_invalid_column_name(setup_db):
+#     if not setup_db:
+#         pytest.skip("Database connection could not be established.")
+#     booking_db_utils = BookingDBUtils(db=setup_db)
+#     with pytest.raises(HTTPException) as exc_info:
+#         booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+#                                       column_name="invalid_column",
+#                                       vals=["2026-02-12"])
+#     assert exc_info.value.status_code == 500
+#     assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)
+
+
+# def test_get_bookings_with_no_record_id_entry(setup_db):
+#     if not setup_db:
+#         pytest.skip("Database connection could not be established.")
+#     booking_db_utils = BookingDBUtils(db=setup_db)
+#     with pytest.raises(HTTPException) as exc_info:
+#         booking_db_utils.get_bookings(column_name="date",
+#                                       vals=["2026-02-12"])
+#     assert exc_info.value.status_code == 500
+#     assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)
+
+# def test_get_bookings_with_no_column_name_entry(setup_db):
+#     if not setup_db:
+#         pytest.skip("Database connection could not be established.")
+#     booking_db_utils = BookingDBUtils(db=setup_db)
+#     with pytest.raises(HTTPException) as exc_info:
+#         booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+#                                       vals=["2026-02-12"])
+#     assert exc_info.value.status_code == 500
+#     assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)
+
+# def test_get_bookings_with_no_vals_entry(setup_db):
     if not setup_db:
         pytest.skip("Database connection could not be established.")
     booking_db_utils = BookingDBUtils(db=setup_db)
     with pytest.raises(HTTPException) as exc_info:
-        booking_db_utils.get_bookings(record_id=None,
-                                            column_name="date",
-                                            vals=["2026-02-12"])
+        booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+                                      column_name="date")
     assert exc_info.value.status_code == 500
     assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)

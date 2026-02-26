@@ -81,6 +81,7 @@ def test_get_bookings_with_none_record_id(setup_db):
                                       column_name="date",
                                       vals=["2026-02-12"])
     assert str(exc_info.value) == "Record ID, column name, and values must be provided"
+    
 def test_get_bookings_with_none_column_name(setup_db):
     if not setup_db:
         pytest.skip("Database connection could not be established.")

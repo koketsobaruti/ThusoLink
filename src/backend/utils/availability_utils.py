@@ -74,6 +74,9 @@ def validate_request(request: SetOffDay, user_id) -> bool:
     if request is None or user_id is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Missing required fields: record_id, user_id, and date are all required.")
+    # validate that user_id is valid UUID
+    if not uuid.UUID(str(user_id)):
+        raise ValueError("Invalid user id input")
     if request.request_type not in [AvailabilityType.BUSINESS, AvailabilityType.SERVICE, AvailabilityType.EMPLOYEE] or request.request_type is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request type")
     

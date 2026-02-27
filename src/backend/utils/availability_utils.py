@@ -2,10 +2,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from time import timezone
 from uuid import uuid4
+import uuid
 
 from fastapi import HTTPException, status
 from ..utils.logger_utils import LoggerUtils
-from ..schemas.business.schedule_schema import AvailabilityRequest, AvailabilityType
+from ..schemas.business.schedule_schema import AvailabilityRequest, AvailabilityType, SetOffDay
 from ..schemas.business.bookings_schema import BookingType
 logger = LoggerUtils.get_logger("Schedule Manager")
 
@@ -68,19 +69,19 @@ def validate_and_insert_slot(idx, slot):
             "status": "failed",
             "reason": str(e)}
 
-def validate_request(request: SetOffDay):
+def validate_request(request: SetOffDay, user_id) -> bool:
+    is_valid = False
     if request is None or user_id is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Missing required fields: record_id, user_id, and date are all required.")
-    if not request.off_dates or not isinstance(request.off_dates, list):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Date must be a non-empty list of dates.")
-            
-    if request.request_type not in [AvailabilityType.BUSINESS, AvailabilityType.SERVICE, AvailabilityType.EMPLOYEE]:
+    if request.request_type not in [AvailabilityType.BUSINESS, AvailabilityType.SERVICE, AvailabilityType.EMPLOYEE] or request.request_type is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request type")
-    elif not request.off_dates:
+    
+    if not request.off_dates or request.off_dates == [] or request.off_dates is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Off dates must be provided")
-    elif not request.record_id:
+    
+    elif not request.record_id or uuid.UUID(str(request.record_id)) or request.record_id is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Record ID must be provided")
     else:
-        return True  
+        is_valid = False  
+    return is_valid

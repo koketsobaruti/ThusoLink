@@ -181,13 +181,6 @@ class ScheduleManager:
     
     def set_off_day(self, request: SetOffDay, user_id: str) -> GeneralResponse:
         try:
-            if request is None or user_id is None:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail="Missing required fields: record_id, user_id, and date are all required.")
-            if not request.off_dates or not isinstance(request.off_dates, list):
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail="Date must be a non-empty list of dates.")
-            
             # Verify ownership of the business for which off days are being set
             # Verify ownership of the record (service/business) for which availability is being set
             ownership_check_func = self.availability_check_map[request.request_type.value]

@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException, status
 from ..utils.logger_utils import LoggerUtils
-from ..schemas.business.schedule_schema import AvailabilityRequest
+from ..schemas.business.schedule_schema import AvailabilityRequest, AvailabilityType
 from ..schemas.business.bookings_schema import BookingType
 logger = LoggerUtils.get_logger("Schedule Manager")
 
@@ -67,4 +67,20 @@ def validate_and_insert_slot(idx, slot):
             "slot": slot,
             "status": "failed",
             "reason": str(e)}
-    
+
+def validate_request(request: SetOffDay):
+    if request is None or user_id is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Missing required fields: record_id, user_id, and date are all required.")
+    if not request.off_dates or not isinstance(request.off_dates, list):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Date must be a non-empty list of dates.")
+            
+    if request.request_type not in [AvailabilityType.BUSINESS, AvailabilityType.SERVICE, AvailabilityType.EMPLOYEE]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request type")
+    elif not request.off_dates:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Off dates must be provided")
+    elif not request.record_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Record ID must be provided")
+    else:
+        return True  

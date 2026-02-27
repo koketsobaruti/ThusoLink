@@ -304,6 +304,8 @@ class BookingDBUtils:
         
     def get_bookings(self, record_id, column_name, vals):
         try:
+            if record_id is None or column_name is None or vals is None:
+                raise ValueError("Record ID, column name, and values must be provided")
             query = f"""SELECT * FROM booking B 
                     JOIN availability A ON B.availability_id = A.id 
                     WHERE A.record_id=:record_id 

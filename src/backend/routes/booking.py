@@ -3,7 +3,7 @@ from typing import Any, Dict
 import uuid
 from fastapi import APIRouter, Depends, Request, HTTPException, status, BackgroundTasks
 from pydantic import BaseModel
-from ..schemas.business.schedule_schema import AvailabilityFilter, SetOffDay
+from ..schemas.business.schedule_schema import AvailabilityFilter, AvailabilityType, SetOffDay
 from ..auth.jwt_bearer import get_current_user, get_current_active_user, oauth2_scheme
 from ..utils.logger_utils import LoggerUtils
 from ..schemas.business.schedule_schema import SetAvailabilityRequest, AvailabilityRequest
@@ -85,27 +85,36 @@ async def request_booking(request: BookingRequest,
 async def set_off_day(request: SetOffDay, background_tasks: BackgroundTasks
                       , db: Session = Depends(get_db),
                          user=Depends(get_current_user)) :
-    schedule_manager = ScheduleManager(db)
-    # logger.info(f"Record ID {request.record_id} \n User ID {user.id}")
-    response = schedule_manager.set_off_day(request, user.id)
-    
-    background_tasks.add_task(
-        schedule_manager.update_current_bookings,
-        request
-    )
+    if validate_request(request):
+        schedule_manager = ScheduleManager(db)
+        # logger.info(f"Record ID {request.record_id} \n User ID {user.id}")
+        response = schedule_manager.set_off_day(request, user.id)
+        
+        background_tasks.add_task(
+            schedule_manager.update_current_bookings,
+            request
+        )
 
-    background_tasks.add_task(
-        schedule_manager.update_avaialability_status,
-        request
-    )
-
+        background_tasks.add_task(
+            schedule_manager.update_avaialability_status,
+            request
+        )
     # background_tasks.add_task(
     #     schedule_manager.notify_customers_of_unavailability,
     #     request
     # )
 
     return response
-                      
+def validate_request(request: Request):
+
+    if request.request_type not in [AvailabilityType.BUSINESS, AvailabilityType.SERVICE, AvailabilityType.EMPLOYEE]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request type")
+    elif not request.off_dates:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Off dates must be provided")
+    elif not request.record_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Record ID must be provided")
+    else:
+        return True       
 # @router.post("/webhook")
 # async def whatsapp_webhook(request: Request, db: Session = Depends(get_current_user)):
 #     payload: Dict[str, Any] = await request.json()

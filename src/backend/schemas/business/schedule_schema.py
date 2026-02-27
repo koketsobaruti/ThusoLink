@@ -57,7 +57,7 @@ class AvailabilityResponse(BaseModel):
     availability_status: str
 
 class SetOffDay(BaseModel):
-    record_id: str
+    record_id: UUID
     request_type: AvailabilityType
     off_dates: list[date]
 

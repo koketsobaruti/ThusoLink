@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+import uuid
 from ...app import app
 from fastapi.testclient import TestClient
 from ..database.connection import get_db
@@ -15,7 +16,7 @@ def client():
 
     def override_get_current_user():
         class FakeUser:
-            id = 1
+            id = uuid.UUID()
         return FakeUser()
 
     app.dependency_overrides[get_db] = override_get_db

@@ -10,7 +10,7 @@ from ...schemas.general_response import GeneralResponse
 from ...schemas.business.schedule_schema import SetAvailabilityRequest, SetOffDay
 from ...utils.database.db_utils import DBUtils
 from ...schemas.business.bookings_schema import BookingStatus
-from ...utils.availability_utils import check_availability_input
+from ...utils.availability_utils import check_availability_input, validate_request
 from ...schemas.business.schedule_schema import AvailabilityFilter, AvailabilityResponse, AvailabilityRequest, AvailabilityStatus
 from ...utils.database.service_db_utils import ServiceDBUtils
 from ...models.business.schedule_model import Availability
@@ -182,6 +182,7 @@ class ScheduleManager:
     
     def set_off_day(self, request: SetOffDay, user_id: str) -> GeneralResponse:
         try:
+            validate_request(request=request, user_id=user_id)
             # Verify ownership of the business for which off days are being set
             # Verify ownership of the record (service/business) for which availability is being set
             ownership_check_func = self.availability_check_map[request.request_type.value]

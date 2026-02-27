@@ -69,22 +69,17 @@ def validate_and_insert_slot(idx, slot):
             "status": "failed",
             "reason": str(e)}
 
-def validate_request(request: SetOffDay, user_id) -> bool:
-    is_valid = False
-    if request is None or user_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Missing required fields: record_id, user_id, and date are all required.")
-    # validate that user_id is valid UUID
-    if not uuid.UUID(str(user_id)):
-        raise ValueError("Invalid user id input")
-    if request.request_type not in [AvailabilityType.BUSINESS, AvailabilityType.SERVICE, AvailabilityType.EMPLOYEE] or request.request_type is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request type")
-    
-    if not request.off_dates or request.off_dates == [] or request.off_dates is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Off dates must be provided")
-    
-    elif not request.record_id or uuid.UUID(str(request.record_id)) or request.record_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Record ID must be provided")
-    else:
-        is_valid = False  
-    return is_valid
+from datetime import date
+
+def validate_request(request: SetOffDay, user_id) -> None:
+    if not user_id:
+        raise ValueError("User ID is required")
+
+    if not request.off_dates:
+        raise ValueError("At least one off date must be provided")
+
+    if any(d < date.today() for d in request.off_dates):
+        raise ValueError("Off dates cannot be in the past")
+
+    if len(set(request.off_dates)) != len(request.off_dates):
+        raise ValueError("Duplicate off dates are not allowed")

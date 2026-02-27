@@ -4,40 +4,32 @@ from fastapi.testclient import TestClient
 import pytest
 from ...utils.availability_utils import validate_request
 from ...schemas.business.schedule_schema import SetOffDay
-user_id = uuid.uuid4() 
+test_user_id=uuid.uuid4()
+test_record_id=uuid.uuid4()
 def test_set_off_day_valid_request():
-    off_day_request = SetOffDay(record_id = uuid.uuid4(),
-                                request_type = "business",
-                                off_dates = ["2026-03-01", "2026-03-02"])
+    off_day_request = SetOffDay(record_id = test_record_id,
+    request_type= "business",
+    off_dates = ["2026-03-01", "2026-03-02"])
+    validate_request(request=off_day_request, user_id=test_user_id)
 
-    validate_request(off_day_request, uuid.uuid4())
+def test_no_off_days():
+    off_day_request = SetOffDay(record_id= test_record_id,
+                                request_type= "business",
+                                off_dates = [])
 
-def test_invaild_UUID_record_value():
-    off_day_request = SetOffDay(record_id= "",
-                       request_type = "OFF",
-                       off_dates= ["2026-03-01"])
-    with pytest.raises(ValueError, match="A valid record ID must be provided") as exec_info:
-        validate_request(request=off_day_request, user_id=uuid.uuid4())
-    # assert "Record ID must be provided" in str(exec_info.detail)
-import uuid
-from fastapi.testclient import TestClient
-import pytest
-from ...utils.availability_utils import validate_request
+    with pytest.raises(ValueError, match ="At least one off date must be provided"):
+        validate_request(request=off_day_request, user_id=test_user_id)
 
-user_id = uuid.UUID()
-def test_set_off_day_valid_request():
-    off_day_request = {
-    "record_id": uuid.UUID("550e8400-e29b-41d4-a716-446655440000"),
-    "request_type": "business",
-    "off_dates": ["2026-03-01", "2026-03-02"]}
+def test_invalid_date_before_today():
+    off_day_request = SetOffDay(record_id= test_record_id,
+                                request_type= "business",
+                                off_dates = ["2026-02-20"])
+    with pytest.raises(ValueError, match ="Off dates cannot be in the past"):
+        validate_request(request=off_day_request, user_id=test_user_id)
 
-    actual = validate_request(request=off_day_request, user_id=user_id)
-    assert actual == True
-
-def test_invaild_UUID_value():
-    off_day_request = {"record_id": "not-a-uuid",
-                       "request_type": "OFF",
-                       "off_dates": ["2026-03-01"]}
-    with pytest.raises(ValueError) as exec_info:
-        validate_request(request=off_day_request, user_id=user_id)
-    assert "Invalid availability type requested" in str(exec_info.detail)
+def test_invalid_request_type():
+    off_day_request = SetOffDay(record_id= test_record_id,
+                                request_type= "off",
+                                off_dates = ["2026-02-29"])
+    with pytest.raises(HTTPException):
+        validate_request(request=off_day_request, user_id=test_user_id)

@@ -89,7 +89,6 @@ class ServiceDBUtils:
         
     def verify_service_ownership(self, service_id, user_id) -> bool:
         try:
-            logger.info(f"Service ID {service_id} \n User ID {user_id}")
             service = (self.db.query(BusinessService).join(Business).filter(BusinessService.id == service_id,
                                                                     Business.owner_id == user_id).first())
 

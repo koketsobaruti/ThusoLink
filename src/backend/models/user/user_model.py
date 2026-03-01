@@ -25,7 +25,7 @@ class User(Base):
     # Relationships
     # # User model
     businesses = relationship("Business", back_populates="owner")
-    business_bookings = relationship("BusinessBooking", back_populates="user", cascade="all, delete-orphan")
-    service_bookings = relationship("ServiceBooking", back_populates="user", cascade="all, delete-orphan")
+    # business_bookings = relationship("BusinessBooking", back_populates="user", cascade="all, delete-orphan")
+    # service_bookings = relationship("ServiceBooking", back_populates="user", cascade="all, delete-orphan")
 
 

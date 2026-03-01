@@ -32,8 +32,8 @@ class BusinessBooking(Base):
     # inspiration_images = Column(Text, nullable=True)  # JSON string of URLs
     status = Column(SQLEnum(BookingStatus, name="booking_status_enum"), default=BookingStatus.REQUESTED)
 
-    booking_availability = relationship("BusinessAvailability", back_populates="bookings")  # generic relationship; for joins dynamically, use the model
-    user = relationship("User", back_populates="business_bookings")
+    # booking_availability = relationship("BusinessAvailability", back_populates="bookings")  # generic relationship; for joins dynamically, use the model
+    # user = relationship("User", back_populates="business_bookings")
 
 
 class Booking(Base):

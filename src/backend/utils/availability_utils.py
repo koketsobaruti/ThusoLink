@@ -89,7 +89,7 @@ def validate_request(request: SetOffDay, user_id) -> None:
     if request.request_type not in [type.value for type in AvailabilityType]:
         raise ValidationError("Invalid request type submitted")
     
-    if not uuid.uuid4(str(request.record_id)):
+    if not uuid.UUID(str(request.record_id)):
         raise ValidationError("Invalid request input")
     
     if not all(map(lambda x: is_date_format(x), request.off_dates)):

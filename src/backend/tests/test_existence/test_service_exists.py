@@ -26,7 +26,22 @@ def test_verify_service_ownership_wrong_service_id(setup_db):
     if not setup_db:
         pytest.skip("Database connection could not be established.")
     service_db_utils = ServiceDBUtils(db = setup_db)
-    with pytest.raises(HTTPException):
-        owner = service_db_utils.verify_service_ownership(service_id = "51dfeee6-c543-4ad9-92cb-b57226c99c54", 
+    owner = service_db_utils.verify_service_ownership(service_id = "51dfeee6-c543-4ad9-92cb-b57226c99c54", 
                                                       user_id = "5650122d-e6d7-4a51-b79b-b14b804e28e6")
     assert owner == False 
+
+def test_verify_service_ownership_wrong_user_id(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    service_db_utils = ServiceDBUtils(db = setup_db)
+    owner = service_db_utils.verify_service_ownership(service_id = "31dfeee6-c543-4ad9-92cb-b57226c99c54", 
+                                                      user_id = "4650122d-e6d7-4a51-b79b-b14b804e28e6")
+    assert owner == False
+
+def test_verify_ownership_non_existing_service(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    service_db_utils = ServiceDBUtils(db = setup_db)
+    owner = service_db_utils.verify_service_ownership(service_id = "61dfeee6-c543-4ad9-92cb-b57226c99c54", 
+                                                      user_id = "4650122d-e6d7-4a51-b79b-b14b804e28e6")
+    assert owner == False

@@ -77,10 +77,7 @@ class AvailabilityDBUtils:
             self.db.commit()
         except SQLAlchemyError as e:
             self.db.rollback()
-            raise database_exception.DatabaseError(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to persist off days: {e}",
-            )
+            raise database_exception.DatabaseError(f"Failed to persist off days: {e}")
         
     def get_availability_by_filter(self, filters: AvailabilityFilter):
         try:

@@ -76,15 +76,6 @@ from datetime import date
 def validate_request(request: SetOffDay, user_id) -> None:
     if not user_id:
         raise ValueError("User ID is required")
-
-    if not request.off_dates:
-        raise ValueError("At least one off date must be provided")
-
-    if any(d < date.today() for d in request.off_dates):
-        raise ValueError("Off dates cannot be in the past")
-
-    if len(set(request.off_dates)) != len(request.off_dates):
-        raise ValueError("Duplicate off dates are not allowed")
     
     if request.request_type not in [type.value for type in AvailabilityType]:
         raise ValidationError("Invalid request type submitted")
@@ -92,12 +83,3 @@ def validate_request(request: SetOffDay, user_id) -> None:
     if not uuid.UUID(str(request.record_id)):
         raise ValidationError("Invalid request input")
     
-    if not all(map(lambda x: is_date_format(x), request.off_dates)):
-        raise ValueError("Invalid date formats input")
-    
-@staticmethod
-def is_date_format(value, date_format='%Y-%m-%d'):
-    if not datetime.strptime(value, date_format):
-        return True
-    else:
-        return False

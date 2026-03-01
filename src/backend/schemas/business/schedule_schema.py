@@ -1,6 +1,6 @@
 from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError, field_validator
 import enum
 from datetime import date, time
 
@@ -57,8 +57,20 @@ class AvailabilityResponse(BaseModel):
     availability_status: str
 
 class SetOffDay(BaseModel):
-    record_id: UUID
+    record_id: str
     request_type: AvailabilityType
     off_dates: list[date]
+    
+    @field_validator("off_dates")
+    @classmethod
+    def validate_off_dates(cls, value):
+        if not value:
+            raise ValueError("At least one off date must be provided")
 
+        if any(d < date.today() for d in value):
+            raise ValueError("Off dates cannot be in the past")
 
+        if len(set(value)) != len(value):
+            raise ValueError("Duplicate off dates are not allowed")
+
+        return value

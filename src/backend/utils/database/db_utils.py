@@ -129,19 +129,16 @@ class DBUtils:
         return business_obj.id
     
     
-    def user_business_exists(self, business_id: str, user_id: int) -> Business:
-        logger.info(f"Fetching business ID: {business_id} for user ID: {user_id}")
+    def user_business_exists(self, business_id: str, user_id: int) -> bool:
         business_obj = self.db.query(Business).filter(
             Business.id == business_id,
             Business.owner_id == user_id
         ).first()
         if not business_obj:
             logger.error(f"Business not found or does not belong to user ID: {user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Business not found or does not belong to the user."
-            )
-        
+            return False
+        return True
+    
     def existing_service(self, service_name: str, business_id: str):
         logger.info(f"Checking for existing service '{service_name}' in business ID: {business_id}")
         existing_service = self.db.query(BusinessService).filter(

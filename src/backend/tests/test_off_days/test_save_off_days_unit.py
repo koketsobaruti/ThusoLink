@@ -6,6 +6,7 @@ from ...database.connection import get_db
 from ...utils.database.availability_db_utils import AvailabilityDBUtils
 from ...schemas.business.schedule_schema import SetOffDay
 from pydantic import ValidationError
+from ...utils.custom_exceptions.database_exception import DatabaseError
 from sqlalchemy.exc import SQLAlchemyError
 
 from unittest.mock import MagicMock
@@ -48,11 +49,9 @@ def test_sqlalchemy_error(mock_db):
                         request_type="business",
                         off_dates=["2026-03-14"])
     db_utils = AvailabilityDBUtils(db=mock_db)
-    with pytest.raises(Exception) as exc:
+    with pytest.raises(DatabaseError) as exc:
         db_utils.save_off_days(request)
-    print(type(exc.value))
-    print(exc.value)
-    assert exc.value.status_code == 500
+
     assert mock_db.rollback.called
     assert not mock_db.commit.called
 # these functions worked well. They did not save invalid inputs because the SetOffDay does not let it go that far

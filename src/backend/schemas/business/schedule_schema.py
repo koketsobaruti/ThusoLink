@@ -1,5 +1,6 @@
 from typing import List, Optional
 from uuid import UUID
+import uuid
 from pydantic import BaseModel, ValidationError, field_validator
 import enum
 from datetime import date, time
@@ -57,7 +58,7 @@ class AvailabilityResponse(BaseModel):
     availability_status: str
 
 class SetOffDay(BaseModel):
-    record_id: str
+    record_id: UUID
     request_type: AvailabilityType
     off_dates: list[date]
     

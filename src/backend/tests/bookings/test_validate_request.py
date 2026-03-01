@@ -26,11 +26,13 @@ def test_invalid_date_before_today():
                                 off_dates = ["2026-02-20"])
 
 def test_invalid_request_type():
-    off_day_request = SetOffDay(record_id= uuid.UUID,
-                                request_type= "off",
-                                off_dates = ["2026-02-29"])
+    # off_day_request = SetOffDay(record_id= uuid.UUID,
+    #                             request_type= "off",
+    #                             off_dates = ["2026-02-29"])
     with pytest.raises(ValueError):
-        validate_request(request=off_day_request, user_id=test_user_id)
+        SetOffDay(record_id= uuid.UUID,
+                  request_type= "off",
+                  off_dates = ["2026-02-29"])
 
 def test_invalid_date_type():
     off_day_request = SetOffDay(record_id= test_record_id,

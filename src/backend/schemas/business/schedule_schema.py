@@ -76,7 +76,7 @@ class SetOffDay(BaseModel):
 
         return value
     
-    @field_validator
+    @field_validator("request_type")
     @classmethod
     def validate_request_type(cls, value):
         if value not in [type.item in AvailabilityRequest]:

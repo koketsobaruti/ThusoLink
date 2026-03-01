@@ -5,9 +5,11 @@ from uuid import uuid4
 import uuid
 
 from fastapi import HTTPException, status
+from pydantic import ValidationError
 from ..utils.logger_utils import LoggerUtils
 from ..schemas.business.schedule_schema import AvailabilityRequest, AvailabilityType, SetOffDay
 from ..schemas.business.bookings_schema import BookingType
+
 logger = LoggerUtils.get_logger("Schedule Manager")
 
 def check_availability_input(request: AvailabilityRequest):
@@ -83,3 +85,19 @@ def validate_request(request: SetOffDay, user_id) -> None:
 
     if len(set(request.off_dates)) != len(request.off_dates):
         raise ValueError("Duplicate off dates are not allowed")
+    
+    if request.request_type not in [type.value for type in AvailabilityType]:
+        raise ValidationError("Invalid request type submitted")
+    
+    if not uuid.uuid4(str(request.record_id)):
+        raise ValidationError("Invalid request input")
+    
+    if not all(map(lambda x: is_date_format(x), request.off_dates)):
+        raise ValueError("Invalid date formats input")
+    
+@staticmethod
+def is_date_format(value, date_format='%Y-%m-%d'):
+    if not datetime.strptime(value, date_format):
+        return True
+    else:
+        return False

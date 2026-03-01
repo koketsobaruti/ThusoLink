@@ -227,6 +227,7 @@ class ScheduleManager:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An error occurred while updating bookings for off days."
             )
+        
     def update_avaialability_status(self, request: SetOffDay):
         try:
             availability_obj = self.availability_db_utils.get_availability(record_id=request.record_id, 

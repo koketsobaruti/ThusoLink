@@ -38,5 +38,5 @@ def test_invalid_date_type():
     off_day_request = SetOffDay(record_id= test_record_id,
                                 request_type= "business",
                                 off_dates = ["not date"])
-    with pytest.raises(HTTPException):
+    with pytest.raises(ValueError):
         validate_request(request=off_day_request, user_id=test_user_id)

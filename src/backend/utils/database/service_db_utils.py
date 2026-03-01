@@ -91,14 +91,11 @@ class ServiceDBUtils:
         try:
             service = (self.db.query(BusinessService).join(Business).filter(BusinessService.id == service_id,
                                                                     Business.owner_id == user_id).first())
-            is_owner = True
             if not service:
-                is_owner = False
                 logger.warning(f"Ownership verification failed for service ID {service_id} and user ID {user_id}")
-                raise ValueError("No service found for the user")
-            return is_owner
+                return False
+            return True
         except Exception as e:
-            logger.error(f"Error verifying ownership for service ID {service_id} and user ID {user_id}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error while verifying service ownership.",

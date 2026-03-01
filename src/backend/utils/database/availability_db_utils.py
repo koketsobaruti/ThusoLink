@@ -8,7 +8,7 @@ from fastapi import HTTPException, status
 from ...models.business.schedule_model import Availability
 from ...schemas.business.schedule_schema import AvailabilityFilter
 from ...schemas.business.schedule_schema import SetOffDay
-
+from ...utils.custom_exceptions import database_exception
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text, select, and_, bindparam
 from ..database.CRUD import update
@@ -77,7 +77,7 @@ class AvailabilityDBUtils:
             self.db.commit()
         except SQLAlchemyError as e:
             self.db.rollback()
-            raise Exception(
+            raise database_exception.DatabaseError(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to persist off days: {e}",
             )

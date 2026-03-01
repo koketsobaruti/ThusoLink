@@ -72,7 +72,7 @@ class ServiceAvailability(Base):
         nullable=False,
         default=AvailabilityStatus.AVAILABLE
     )
-    service = relationship("BusinessService", back_populates="availability")
+    # service = relationship("BusinessService", back_populates="availability")
     bookings = relationship("ServiceBooking", back_populates="booking_availability", cascade="all, delete-orphan")
 
 

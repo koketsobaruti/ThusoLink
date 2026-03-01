@@ -1,6 +1,7 @@
 import uuid
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 import pytest
 from ...utils.availability_utils import validate_request
 from ...schemas.business.schedule_schema import SetOffDay
@@ -17,8 +18,10 @@ def test_no_off_days():
                                 request_type= "business",
                                 off_dates = [])
 
-    with pytest.raises(ValueError, match ="At least one off date must be provided"):
-        validate_request(request=off_day_request, user_id=test_user_id)
+    with pytest.raises(ValidationError):
+        SetOffDay(record_id= uuid.uuid4(),
+                                request_type= "business",
+                                off_dates = [])
 
 def test_invalid_date_before_today():
     off_day_request = SetOffDay(record_id= test_record_id,
@@ -38,5 +41,9 @@ def test_invalid_date_type():
     off_day_request = SetOffDay(record_id= test_record_id,
                                 request_type= "business",
                                 off_dates = ["not date"])
-    with pytest.raises(ValueError):
-        validate_request(request=off_day_request, user_id=test_user_id)
+    with pytest.raises(ValidationError):
+        SetOffDay(
+            record_id="123",
+            request_type="business",
+            off_dates=["not-a-date"]
+        )

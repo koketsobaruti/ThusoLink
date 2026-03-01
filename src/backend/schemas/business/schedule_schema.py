@@ -75,3 +75,11 @@ class SetOffDay(BaseModel):
             raise ValueError("Duplicate off dates are not allowed")
 
         return value
+    
+    @field_validator
+    @classmethod
+    def validate_request_type(cls, value):
+        if value not in [type.item in AvailabilityRequest]:
+            raise  ValueError("Select appropriate availability request")
+        if value is None:
+            raise ValueError("Input value for availability request")

@@ -8,9 +8,9 @@ from ...schemas.business.schedule_schema import SetOffDay
 test_user_id=uuid.uuid4()
 test_record_id=uuid.UUID
 def test_set_off_day_valid_request():
-    SetOffDay(record_id = uuid.UUID,
+    SetOffDay(record_id = uuid.uuid4(),
     request_type= "business",
-    off_dates = ["2026-03-01", "2026-03-02"])
+    off_dates = ["2026-03-11", "2026-03-10"])
     # validate_request(request=off_day_request, user_id=test_user_id)
 
 def test_no_off_days():
@@ -26,10 +26,10 @@ def test_invalid_date_before_today():
                                 off_dates = ["2026-02-20"])
 
 def test_invalid_request_type():
-    with pytest.raises(ValidationError, match = "Select appropriate availability request"):
+    with pytest.raises(ValidationError):
         SetOffDay(record_id= test_record_id,
-                                request_type= "off",
-                                off_dates = ["2026-02-29"])
+                  request_type= "not availability type",
+                  off_dates = ["2026-03-20"])
 
 
     

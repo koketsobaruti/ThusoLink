@@ -79,7 +79,7 @@ class SetOffDay(BaseModel):
     @field_validator("request_type")
     @classmethod
     def validate_request_type(cls, option):
-        if option not in AvailabilityType.value:
+        if option not in [e.value for e in AvailabilityType]:
             raise  ValueError("Select appropriate availability request")
         if option is None:
             raise ValueError("Input value for availability request")

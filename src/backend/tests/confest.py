@@ -26,3 +26,14 @@ def client():
         yield c
 
     app.dependency_overrides = {}
+
+@pytest.fixture()
+def setup_db():
+    try:
+        db_gen = get_db()
+        db = next(db_gen)
+        yield db
+        db.close()
+    except Exception as e:
+        print(f"Error setting up database: {e}")
+        

@@ -31,5 +31,17 @@ def test_invalid_request_type():
                   request_type= "not availability type",
                   off_dates = ["2026-03-20"])
 
+def test_invalid_date():
+    with pytest.raises(ValidationError):
+        SetOffDay(record_id= test_record_id,
+                  request_type= "business",
+                  off_dates = ["not-a-date"])
+        
+def test_invalid_record():
+    with pytest.raises(ValidationError):
+        SetOffDay(record_id= "test_invalid_record_id",
+                  request_type= "business",
+                  off_dates = ["2026-03-20"])
+
 
     

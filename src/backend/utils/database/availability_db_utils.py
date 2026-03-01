@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from ...models.business.schedule_model import Availability
 from ...schemas.business.schedule_schema import AvailabilityFilter
+from ...schemas.business.schedule_schema import SetOffDay
+
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text, select, and_, bindparam
 from ..database.CRUD import update
@@ -53,11 +55,10 @@ class AvailabilityDBUtils:
                 detail=f"An unexpected error occurred while saving availability: {e}",
             )
         
-    def save_off_days(self, request):
+    def save_off_days(self, request:SetOffDay):
+        logger.info(f"Saving off days for record_id: {request.record_id} and record: {request}")
         try:
-            logger.info(f"Saving off days for record_id: {request.record_id} and record: {request}")
-            query = f"""
-            INSERT INTO off_day
+            query = f"""INSERT INTO off_day
             (id, record_id, date, created_at, updated_at)
             VALUES (:id,:record_id, :date, :created_at, :updated_at)
             ON CONFLICT (record_id, date) DO NOTHING
@@ -70,21 +71,15 @@ class AvailabilityDBUtils:
                     "record_id": request.record_id,
                     "date": date,
                     "created_at": created_at,
-                    "updated_at": updated_at
-                })
+                    "updated_at": updated_at})
+                
             self.db.execute(text(query), batch_data)
             self.db.commit()
         except SQLAlchemyError as e:
             self.db.rollback()
-            raise HTTPException(
+            raise Exception(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to persist off days: {e}",
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error while saving off days: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"An unexpected error occurred while saving off days: {e}",
             )
         
     def get_availability_by_filter(self, filters: AvailabilityFilter):

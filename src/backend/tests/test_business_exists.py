@@ -12,9 +12,19 @@ def setup_db():
     except Exception as e:
         print(f"Error setting up database: {e}")
     
-def test_get_bookings_with_all_values(setup_db):
+def test_verify_service_ownership_valid_input(setup_db):
     if not setup_db:
         pytest.skip("Database connection could not be established.")
     service_db_utils = ServiceDBUtils(db = setup_db)
-    owner = service_db_utils.verify_service_ownership("31dfeee6-c543-4ad9-92cb-b57226c99c54", "7a74a6af-cbda-46cd-90e6-2ca299210b67")
+    owner = service_db_utils.verify_service_ownership(service_id = "31dfeee6-c543-4ad9-92cb-b57226c99c54", 
+                                                      user_id = "5650122d-e6d7-4a51-b79b-b14b804e28e6")
     assert owner == True
+
+def test_verify_service_ownership_wrong_service_id(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    service_db_utils = ServiceDBUtils(db = setup_db)
+    with pytest.raises(ValueError):
+        owner = service_db_utils.verify_service_ownership(service_id = "51dfeee6-c543-4ad9-92cb-b57226c99c54", 
+                                                      user_id = "5650122d-e6d7-4a51-b79b-b14b804e28e6")
+    assert owner == False 

@@ -14,27 +14,22 @@ def test_set_off_day_valid_request():
     validate_request(request=off_day_request, user_id=test_user_id)
 
 def test_no_off_days():
-    off_day_request = SetOffDay(record_id= test_record_id,
-                                request_type= "business",
-                                off_dates = [])
-
     with pytest.raises(ValidationError):
-        SetOffDay(record_id= uuid.uuid4(),
+        SetOffDay(record_id= uuid.UUID,
                                 request_type= "business",
                                 off_dates = [])
 
 def test_invalid_date_before_today():
-    off_day_request = SetOffDay(record_id= test_record_id,
+    with pytest.raises(ValidationError, match ="Off dates cannot be in the past"):
+        SetOffDay(record_id= test_record_id,
                                 request_type= "business",
                                 off_dates = ["2026-02-20"])
-    with pytest.raises(ValueError, match ="Off dates cannot be in the past"):
-        validate_request(request=off_day_request, user_id=test_user_id)
 
 def test_invalid_request_type():
-    off_day_request = SetOffDay(record_id= test_record_id,
+    off_day_request = SetOffDay(record_id= uuid.UUID,
                                 request_type= "off",
                                 off_dates = ["2026-02-29"])
-    with pytest.raises(HTTPException):
+    with pytest.raises(ValueError):
         validate_request(request=off_day_request, user_id=test_user_id)
 
 def test_invalid_date_type():

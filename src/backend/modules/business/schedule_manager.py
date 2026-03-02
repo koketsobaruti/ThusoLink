@@ -182,7 +182,8 @@ class ScheduleManager:
     
     def set_off_day(self, request: SetOffDay, user_id: str) -> GeneralResponse:
         try:
-            validate_request(request=request, user_id=user_id)
+            if not user_id or not request:
+                raise ValueError("User ID or request sent for off day is missing")
             # Verify ownership of the business for which off days are being set
             # Verify ownership of the record (service/business) for which availability is being set
             ownership_check_func = self.availability_check_map[request.request_type.value]

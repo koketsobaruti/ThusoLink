@@ -83,3 +83,9 @@ class SetOffDay(BaseModel):
             raise  ValueError("Select appropriate availability request")
         if option is None:
             raise ValueError("Input value for availability request")
+    
+    @field_validator("record_id")
+    @classmethod
+    def validate_record_id(cls, value):
+        if not uuid.UUID(str(value)):
+            raise ValidationError("Invalid request input")

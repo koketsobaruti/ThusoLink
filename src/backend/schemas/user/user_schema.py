@@ -74,5 +74,5 @@ class UserResponse(BaseModel):
     full_name: str
     email: EmailStr
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

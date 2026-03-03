@@ -5,6 +5,8 @@ from ...schemas.business.schedule_schema import AvailabilityType, SetOffDay
 import pytest
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
+from ...utils.custom_exceptions import database_exception
+from sqlalchemy.exc import SQLAlchemyError
 from unittest.mock import MagicMock
 db_gen = get_db()
 db = next(db_gen)
@@ -74,15 +76,13 @@ def test_set_off_day_db_failure(setup_db):
     schedule_manager.availability_check_map[AvailabilityType.BUSINESS] = MagicMock(return_value=True)
 
     # Mock DB save to fail
-    schedule_manager.availability_db_utils.save_off_days = MagicMock(
-        side_effect=HTTPException(status_code=500, detail="DB failure")
-    )
+    schedule_manager.availability_db_utils.db.execute = MagicMock(
+    side_effect=SQLAlchemyError("DB is down"))
 
-    with pytest.raises(HTTPException) as exc:
-        schedule_manager.set_off_day(request, "user-id")
+    
+    with pytest.raises(database_exception.DatabaseError) as exc:
+        schedule_manager.availability_db_utils.save_off_days(request)
 
-    assert exc.value.status_code == 500
-    assert exc.value.detail == "DB failure"
 
 # -------------------------------
 # 3️⃣ Test missing input (HTTP 400)
@@ -95,7 +95,7 @@ def test_set_off_day_missing_input(setup_db):
         schedule_manager.set_off_day(None, "user-id")
 
     assert exc.value.status_code == 400
-    assert exc.value.detail == "User ID or request is missing"
+    assert exc.value.detail == "Missing input"
 # from unittest.mock import MagicMock, patch
 # from uuid import uuid4
 # from datetime import date

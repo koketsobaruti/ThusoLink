@@ -19,7 +19,7 @@ class ServiceBooking(Base):
     status = Column(SQLEnum(BookingStatus, name="booking_status_enum"), default=BookingStatus.REQUESTED)
 
     # booking_availability = relationship("ServiceAvailability", back_populates="bookings")  # generic relationship; for joins dynamically, use the model
-    user = relationship("User", back_populates = "service_bookings")
+    # user = relationship("User", back_populates = "service_bookings")
     
 class BusinessBooking(Base):
     __tablename__ = "business_booking"

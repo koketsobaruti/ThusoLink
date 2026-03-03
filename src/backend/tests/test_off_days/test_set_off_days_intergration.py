@@ -1,7 +1,7 @@
 import uuid
 from ...modules.business.schedule_manager import ScheduleManager
 from ...database.connection import get_db
-from ...schemas.business.schedule_schema import SetOffDay
+from ...schemas.business.schedule_schema import AvailabilityType, SetOffDay
 import pytest
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -28,8 +28,8 @@ def test_set_off_day(setup_db):
         pytest.skip("Database connection could not be established")
 
     schedule_manager = ScheduleManager(db=setup_db)
-    request = SetOffDay(record_id="31dfeee6-c543-4ad9-92cb-b57226c99c54",
-                        request_type="business",
+    request = SetOffDay(record_id=uuid.UUID("31dfeee6-c543-4ad9-92cb-b57226c99c54"),
+                        request_type=AvailabilityType.BUSINESS,
                         off_dates=["2026-03-15"])
     response = schedule_manager.set_off_day(request, "5650122d-e6d7-4a51-b79b-b14b804e28e6")
     assert response.status == 200

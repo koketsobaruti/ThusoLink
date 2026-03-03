@@ -5,6 +5,7 @@ from ...schemas.business.schedule_schema import AvailabilityType, SetOffDay
 import pytest
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
+from unittest.mock import MagicMock
 db_gen = get_db()
 db = next(db_gen)
 
@@ -36,6 +37,65 @@ def test_set_off_day(setup_db):
     assert response.message == "Off days set successfully"
     assert response.data["record_id"] == request.record_id
 
+def test_set_off_day_ownership_failure(setup_db):
+    schedule_manager = ScheduleManager(db=setup_db)
+
+    request = SetOffDay(
+        record_id=uuid.uuid4(),
+        request_type="business",
+        off_dates=["2026-03-10"]
+    )
+
+    # Mock the ownership check to fail
+    schedule_manager.availability_check_map[AvailabilityType.BUSINESS] = MagicMock(
+        side_effect=HTTPException(status_code=403, detail="User does not own this business")
+    )
+
+    # Expect HTTPException to propagate
+    with pytest.raises(HTTPException) as exc:
+        schedule_manager.set_off_day(request, "user-id")
+
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "User does not own this business"
+
+# -------------------------------
+# 2️⃣ Test HTTPException from DB failure
+# -------------------------------
+def test_set_off_day_db_failure(setup_db):
+    schedule_manager = ScheduleManager(db=setup_db)
+
+    request = SetOffDay(
+        record_id=uuid.uuid4(),
+        request_type="business",
+        off_dates=["2026-03-10"]
+    )
+
+    # Mock ownership check to succeed
+    schedule_manager.availability_check_map[AvailabilityType.BUSINESS] = MagicMock(return_value=True)
+
+    # Mock DB save to fail
+    schedule_manager.availability_db_utils.save_off_days = MagicMock(
+        side_effect=HTTPException(status_code=500, detail="DB failure")
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        schedule_manager.set_off_day(request, "user-id")
+
+    assert exc.value.status_code == 500
+    assert exc.value.detail == "DB failure"
+
+# -------------------------------
+# 3️⃣ Test missing input (HTTP 400)
+# -------------------------------
+def test_set_off_day_missing_input(setup_db):
+    schedule_manager = ScheduleManager(db=setup_db)
+
+    # Pass None as request to simulate missing input
+    with pytest.raises(HTTPException) as exc:
+        schedule_manager.set_off_day(None, "user-id")
+
+    assert exc.value.status_code == 400
+    assert exc.value.detail == "User ID or request is missing"
 # from unittest.mock import MagicMock, patch
 # from uuid import uuid4
 # from datetime import date

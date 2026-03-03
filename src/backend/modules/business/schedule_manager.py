@@ -181,12 +181,13 @@ class ScheduleManager:
             )
     
     def set_off_day(self, request: SetOffDay, user_id: str) -> GeneralResponse:
+        if not user_id or not request:
+            raise HTTPException(status_code=400, detail="Missing input")
+        # Verify ownership of the business for which off days are being set
+        # Verify ownership of the record (service/business) for which availability is being set
+        ownership_check_func = self.availability_check_map[request.request_type]
+        ownership_check_func(request.record_id, user_id)
         try:
-            if not user_id or not request:
-                raise ValueError("User ID or request sent for off day is missing")
-            ownership_check_func = self.availability_check_map[request.request_type.value]
-            ownership_check_func(request.record_id, user_id)
-
             # Save off days to the database
             self.availability_db_utils.save_off_days(request=request)
             return GeneralResponse(
@@ -194,10 +195,8 @@ class ScheduleManager:
                 message="Off days set successfully",
                 data={"record_id": request.record_id, "dates": request.off_dates})
         
-        except HTTPException as e:
-            self.db.rollback()
-            logger.error(f"Error setting off days: {str(e)}")
-            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Failed to save off days")
         
     def update_current_bookings(self, request: SetOffDay):
         try:

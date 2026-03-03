@@ -87,13 +87,12 @@ class ServiceDBUtils:
             raise
         
         
-    def verify_service_ownership(self, service_id, user_id) -> bool:
+    def verify_service_ownership(self, service_id, user_id):
         service = (self.db.query(BusinessService).join(Business).filter(BusinessService.id == service_id,
                                                                     Business.owner_id == user_id).first())
         if not service:
             logger.error(f"Ownership verification failed for service ID {service_id} and user ID {user_id}")
-            return False
-        return True
+            raise HTTPException(status_code=403, detail="User does not own this resource")
         
     def save_availability(self, results, table_name: str, id_column: str, column_name:str) -> None:
         

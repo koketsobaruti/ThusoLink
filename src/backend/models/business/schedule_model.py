@@ -74,6 +74,7 @@ class ServiceAvailability(Base):
     )
     # service = relationship("BusinessService", back_populates="availability")
     # bookings = relationship("ServiceBooking", back_populates="booking_availability", cascade="all, delete-orphan")
+    # bookings = relationship("ServiceBooking", back_populates="booking_availability", cascade="all, delete-orphan")
 
 
 class BusinessAvailability(Base):

@@ -43,7 +43,14 @@ def test_get_bookings_with_all_values(setup_db):
                 "notes":"Customer prefers morning appointment",
                 "booking_type":"BUSINESS"}]
     assert actual == expected
-
+def test_return_no_bookings(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    booking_db_utils = BookingDBUtils(db=setup_db)
+    actual = booking_db_utils.get_bookings(record_id="5a74a6af-cbda-46cd-90e6-2ca299210b67",
+                                           column_name="date",
+                                           vals=["2026-02-12"])
+    assert actual == []
 def test_get_bookings_with_none_record_id(mock_db):
     booking_db_utils = BookingDBUtils(db=mock_db)
     with pytest.raises(HTTPException) as exc_info:

@@ -11,6 +11,7 @@ class BookingStatus(str, Enum):
     CANCELLED = "cancelled"
     COMPLETE = "complete"
     UNAVAILABLE = "unavailable"
+    RESCHEDULE_REQUIRED = "reschedule_required"
 
 class BookingRequest(BaseModel):
     availability_type: AvailabilityType
@@ -89,3 +90,24 @@ class GetBooking(BaseModel):
         if not value:
             raise ValueError("The record id must not be null")
         return value
+
+class UpdateBookings:
+    booking_id: list[UUID]
+    status_value: BookingStatus
+
+    @field_validator("booking_id")
+    @classmethod
+    def validate_booking_id(cls, value):
+        if not UUID(str(value)):
+            raise ValidationError("Invalid request input for the booking id")
+        if not value:
+            raise ValueError("The booking id must not be null")
+        return value
+    
+    @field_validator("status_value")
+    @classmethod
+    def validate_status_type(cls, option):
+        if option not in [e.value for e in BookingStatus]:
+            raise  ValueError("Select appropriate booking status")
+        if option is None:
+            raise ValueError("Input value for booking status")

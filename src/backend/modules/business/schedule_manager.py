@@ -19,6 +19,9 @@ from ...config.availability_map import AVAILABILITY_CHECK_MAP, AVAILABILITY_MAP
 from ...utils.logger_utils import LoggerUtils
 from ...utils.database.booking_db_utils import BookingDBUtils 
 from ...utils.database.availability_db_utils import AvailabilityDBUtils
+from ...schemas.business.bookings_schema import UpdateBookings
+
+
 logger = LoggerUtils.get_logger("Schedule Manager")
 class ScheduleManager:
     def __init__(self, db: Session):
@@ -199,22 +202,20 @@ class ScheduleManager:
             raise HTTPException(status_code=500, detail="Failed to save off days")
         
     def update_current_bookings(self, request: SetOffDay):
+        if not request:
+            raise HTTPException(status_code=400, detail="Missing request input")
+        get_booking_obj = GetBooking(record_id=request.record_id,
+                                     column_name="date",
+                                     vals=request.off_dates)
         try:
-            if not request:
-                raise HTTPException(status_code=400, detail="Missing request input")
-            get_booking_obj = GetBooking(record_id=request.record_id,
-                                         column_name="date",
-                                         vals=request.off_dates)
             booking_obj = self.booking_db_utils.get_bookings(get_booking_obj)
 
             if not booking_obj:
                 logger.info("No bookings to update for off days")
                 return  # ✅ Normal case — just exit cleanly
-
-            self.availability_db_utils.update_booking_status(
-                booking_ids=[b["id"] for b in booking_obj],  # since you return dicts
-                status_value=BookingStatus.CANCELLED.value
-            )
+            update_bookings_obj = UpdateBookings(booking_id=[b["id"] for b in booking_obj],  # since you return dicts
+                                                status_value=BookingStatus.RESCHEDULE_REQUIRED.value)
+            self.booking_db_utils.update_booking_status(update_bookings_obj)
         except Exception as e:
             logger.error(f"Error updating bookings for off days: {str(e)}")
             raise HTTPException(

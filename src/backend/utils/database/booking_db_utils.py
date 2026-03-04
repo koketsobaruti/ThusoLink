@@ -17,6 +17,9 @@ from ...utils.database.business_db_utils import BusinessDBUtils
 from ...models.business.booking_model import ServiceBooking, BusinessBooking, Booking
 from ...schemas.business.bookings_schema import BookingResponse, WhatsAppBookingDetails, GetBooking
 from ...utils.custom_exceptions import database_exception
+from ...schemas.business.bookings_schema import UpdateBookings
+from sqlalchemy import text, select, and_, bindparam
+from collections.abc import Iterable
 
 
 logger = LoggerUtils.get_logger("Booking DB Utils")
@@ -319,4 +322,23 @@ class BookingDBUtils:
             self.db.rollback()
             raise database_exception.DatabaseError(f"Failed to persist bookings: {e}")
 
-        
+    def update_booking_status(self, request: UpdateBookings):
+        #  Normalize to list
+        if not isinstance(request.booking_id, Iterable) or isinstance(request.booking_id, (str, bytes)):
+            booking_ids = [request.booking_id]
+        query = text("""
+                UPDATE booking
+                SET status = :status
+                WHERE id IN :booking_ids
+            """).bindparams(bindparam("booking_ids", expanding=True))
+        try:
+            self.db.execute(query, {
+                "status": request.status_value,
+                "booking_ids": booking_ids
+            })
+
+            self.db.commit()
+
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise database_exception.DatabaseError(f"Failed to update bookings: {e}")

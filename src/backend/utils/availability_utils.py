@@ -77,4 +77,6 @@ def validate_request(request: SetOffDay, user_id) -> None:
     if not user_id:
         raise ValueError("User ID is required")
     
+    if not uuid.UUID(str(request.record_id)):
+        raise ValidationError("Invalid request input")
     

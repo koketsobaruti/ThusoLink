@@ -184,16 +184,16 @@ class AvailabilityDBUtils:
             )
         
     def update_booking_status(self, booking_ids, status_value: str):
-        try:
+
             # Normalize to list
-            if not isinstance(booking_ids, Iterable) or isinstance(booking_ids, (str, bytes)):
-                booking_ids = [booking_ids]
-            query = text("""
+        if not isinstance(booking_ids, Iterable) or isinstance(booking_ids, (str, bytes)):
+            booking_ids = [booking_ids]
+        query = text("""
                 UPDATE booking
                 SET status = :status
                 WHERE id IN :booking_ids
             """).bindparams(bindparam("booking_ids", expanding=True))
-
+        try:
             self.db.execute(query, {
                 "status": status_value,
                 "booking_ids": booking_ids
@@ -203,7 +203,4 @@ class AvailabilityDBUtils:
 
         except SQLAlchemyError as e:
             self.db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to update booking status: {e}",
-            )
+            raise database_exception.DatabaseError(f"Failed to update bookings: {e}")

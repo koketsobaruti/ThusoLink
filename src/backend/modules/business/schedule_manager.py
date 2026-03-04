@@ -200,6 +200,8 @@ class ScheduleManager:
         
     def update_current_bookings(self, request: SetOffDay):
         try:
+            if not request:
+                raise HTTPException(status_code=400, detail="Missing request input")
             booking_obj = self.booking_db_utils.get_bookings(
                 record_id=request.record_id,
                 column_name="date",
@@ -214,11 +216,6 @@ class ScheduleManager:
                 booking_ids=[b["id"] for b in booking_obj],  # since you return dicts
                 status_value=BookingStatus.CANCELLED.value
             )
-
-            logger.info("Updated bookings status for off days")
-
-        except HTTPException:
-            raise  # ✅ Do NOT convert intended HTTP errors into 500
         except Exception as e:
             logger.error(f"Error updating bookings for off days: {str(e)}")
             raise HTTPException(

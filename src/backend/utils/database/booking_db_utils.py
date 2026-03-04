@@ -16,6 +16,8 @@ from ...models.business.schedule_model import Availability
 from ...utils.database.business_db_utils import BusinessDBUtils
 from ...models.business.booking_model import ServiceBooking, BusinessBooking, Booking
 from ...schemas.business.bookings_schema import BookingResponse, WhatsAppBookingDetails
+from ...utils.custom_exceptions import database_exception
+
 logger = LoggerUtils.get_logger("Booking DB Utils")
 class BookingDBUtils:
     def __init__(self, db: Session):
@@ -303,28 +305,19 @@ class BookingDBUtils:
             )
         
     def get_bookings(self, record_id, column_name, vals):
-        try:
-            if record_id is None or column_name is None or vals is None:
-                raise ValueError("Record ID, column name, and values must be provided")
+        if record_id is None or column_name is None or vals is None:
+            raise HTTPException(status_code=400, detail="Missing input")
             
-            query = f"""SELECT B.id, B.availability_id, B.customer_id, B.customization, B.notes, B.booking_type FROM booking B 
+        query = f"""SELECT B.id, B.availability_id, B.customer_id, B.customization, B.notes, B.booking_type FROM booking B 
                     LEFT JOIN availability A ON B.availability_id = A.id 
                     WHERE A.record_id=:record_id 
                     AND A.{column_name} IN :value"""
-            # if record_id is None or value is invalid
-
+        # if record_id is None or value is invalid
+        try:
             bookings = self.db.execute( text(query), {"record_id": record_id, "value": tuple(vals)}).fetchall()
-            logger.info(f"Bookings: {bookings}")
-            # if not bookings:
-            #     logger.info(f"No bookings found for record ID {record_id} with column {column_name} and values {vals}")
-            #     raise
-            
-
             return [dict(row._mapping) for row in bookings] if bookings else []
-        except Exception as e:
-            logger.error(f"Error fetching bookings: {e}")
-            # raise HTTPException(
-            #     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            #     detail=f"Internal server error while fetching bookings for {record_id}.",
-            #     headers={"WWW-Authenticate": "Bearer"}
-            # )
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise database_exception.DatabaseError(f"Failed to persist bookings: {e}")
+
+        

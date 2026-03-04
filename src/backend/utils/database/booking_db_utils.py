@@ -305,9 +305,11 @@ class BookingDBUtils:
             )
         
     def get_bookings(self, record_id, column_name, vals):
-        if record_id is None or column_name is None or vals is None:
+        if record_id is None or column_name is None:
             raise HTTPException(status_code=400, detail="Missing input")
-            
+        if not vals:
+            raise ValueError("At least one off date must be provided")
+        
         query = f"""SELECT B.id, B.availability_id, B.customer_id, B.customization, B.notes, B.booking_type FROM booking B 
                     LEFT JOIN availability A ON B.availability_id = A.id 
                     WHERE A.record_id=:record_id 

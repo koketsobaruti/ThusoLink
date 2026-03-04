@@ -5,14 +5,18 @@ from ...database.connection import get_db
 import pytest
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
-db_gen = get_db()
-db = next(db_gen)
+from unittest.mock import MagicMock
 
 class BookingsTest:
     record_id:str
     column_name:str
     vals:list
 
+@pytest.fixture
+def mock_db():
+    db = MagicMock()
+    return db
+    
 @pytest.fixture(scope="module")
 def setup_db():
     try:
@@ -38,6 +42,31 @@ def test_get_bookings_with_all_values(setup_db):
                 "notes":"Customer prefers morning appointment",
                 "booking_type":"BUSINESS"}]
     assert actual == expected
+
+def test_get_bookings_with_none_record_id(mock_db):
+    booking_db_utils = BookingDBUtils(db=mock_db)
+    with pytest.raises(HTTPException) as exc_info:
+        booking_db_utils.get_bookings(record_id=None,
+                                      column_name="date",
+                                      vals=["2026-02-12"])
+    assert exc_info.value.detail  == "Missing input"
+    
+def test_get_bookings_with_none_column_name(mock_db):
+    booking_db_utils = BookingDBUtils(db=mock_db)
+    with pytest.raises(HTTPException) as exc_info:
+        booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+                                      column_name=None,
+                                      vals=["2026-02-12"])
+    assert exc_info.value.detail == "Missing input"
+
+def test_get_bookings_with_none_vals(mock_db):
+    booking_db_utils = BookingDBUtils(db=mock_db)
+    with pytest.raises(HTTPException) as exc_info:
+        booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
+                                      column_name="date",
+                                      vals=[])
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Missing input"
 
 # def test_get_bookings_with_invalid_record_id(setup_db):
 #     if not setup_db:
@@ -72,35 +101,7 @@ def test_get_bookings_with_all_values(setup_db):
 #     assert exc_info.value.status_code == 500
 #     assert exc_info.value.detail == "Internal server error" in str(exc_info.value.detail)
 
-def test_get_bookings_with_none_record_id(setup_db):
-    if not setup_db:
-        pytest.skip("Database connection could not be established.")
-    booking_db_utils = BookingDBUtils(db=setup_db)
-    with pytest.raises(ValueError) as exc_info:
-        booking_db_utils.get_bookings(record_id=None,
-                                      column_name="date",
-                                      vals=["2026-02-12"])
-    assert str(exc_info.value) == "Record ID, column name, and values must be provided"
-    
-def test_get_bookings_with_none_column_name(setup_db):
-    if not setup_db:
-        pytest.skip("Database connection could not be established.")
-    booking_db_utils = BookingDBUtils(db=setup_db)
-    with pytest.raises(ValueError) as exc_info:
-        booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
-                                      column_name=None,
-                                      vals=["2026-02-12"])
-    assert str(exc_info.value) == "Record ID, column name, and values must be provided"
 
-def test_get_bookings_with_none_vals(setup_db):
-    if not setup_db:
-        pytest.skip("Database connection could not be established.")
-    booking_db_utils = BookingDBUtils(db=setup_db)
-    with pytest.raises(ValueError) as exc_info:
-        booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
-                                      column_name="date",
-                                      vals=None)
-    assert str(exc_info.value) == "Record ID, column name, and values must be provided"
 
 # def test_get_bookings_with_empty_vals(setup_db):
 #     if not setup_db:

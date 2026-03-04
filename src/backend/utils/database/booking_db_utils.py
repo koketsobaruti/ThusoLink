@@ -15,8 +15,9 @@ from ...config.booking_map import BOOKING_REGISTRY
 from ...models.business.schedule_model import Availability
 from ...utils.database.business_db_utils import BusinessDBUtils
 from ...models.business.booking_model import ServiceBooking, BusinessBooking, Booking
-from ...schemas.business.bookings_schema import BookingResponse, WhatsAppBookingDetails
+from ...schemas.business.bookings_schema import BookingResponse, WhatsAppBookingDetails, GetBooking
 from ...utils.custom_exceptions import database_exception
+
 
 logger = LoggerUtils.get_logger("Booking DB Utils")
 class BookingDBUtils:
@@ -304,19 +305,15 @@ class BookingDBUtils:
                 headers={"WWW-Authenticate": "Bearer"}
             )
         
-    def get_bookings(self, record_id, column_name, vals):
-        if record_id is None or column_name is None:
-            raise HTTPException(status_code=400, detail="Missing input")
-        if not vals:
-            raise ValueError("At least one off date must be provided")
+    def get_bookings(self, request: GetBooking):
         
         query = f"""SELECT B.id, B.availability_id, B.customer_id, B.customization, B.notes, B.booking_type FROM booking B 
                     LEFT JOIN availability A ON B.availability_id = A.id 
                     WHERE A.record_id=:record_id 
-                    AND A.{column_name} IN :value"""
+                    AND A.{request.column_name} IN :value"""
         # if record_id is None or value is invalid
         try:
-            bookings = self.db.execute( text(query), {"record_id": record_id, "value": tuple(vals)}).fetchall()
+            bookings = self.db.execute( text(query), {"record_id": request.record_id, "value": tuple(request.vals)}).fetchall()
             return [dict(row._mapping) for row in bookings] if bookings else []
         except SQLAlchemyError as e:
             self.db.rollback()

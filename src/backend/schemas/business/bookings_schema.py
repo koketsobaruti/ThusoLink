@@ -77,7 +77,8 @@ class GetBooking(BaseModel):
     def validate_request_type(cls, value):
         if not isinstance(value, str):
             raise ValueError("Input a valid input for column name")
-        
+        if not value:
+            raise ValueError("The column name must be input")
         return value
     
     @field_validator("record_id")
@@ -85,5 +86,6 @@ class GetBooking(BaseModel):
     def validate_record_id(cls, value):
         if not UUID(str(value)):
             raise ValidationError("Invalid request input for the record id")
-        
+        if not value:
+            raise ValueError("The record id must not be null")
         return value

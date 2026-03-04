@@ -9,7 +9,7 @@ from ...schemas.business.service_schema import BusinessServiceCreate, BusinessSe
 from ...schemas.general_response import GeneralResponse
 from ...schemas.business.schedule_schema import SetAvailabilityRequest, SetOffDay
 from ...utils.database.db_utils import DBUtils
-from ...schemas.business.bookings_schema import BookingStatus
+from ...schemas.business.bookings_schema import BookingStatus, GetBooking
 from ...utils.availability_utils import check_availability_input, validate_request
 from ...schemas.business.schedule_schema import AvailabilityFilter, AvailabilityResponse, AvailabilityRequest, AvailabilityStatus
 from ...utils.database.service_db_utils import ServiceDBUtils
@@ -202,11 +202,10 @@ class ScheduleManager:
         try:
             if not request:
                 raise HTTPException(status_code=400, detail="Missing request input")
-            booking_obj = self.booking_db_utils.get_bookings(
-                record_id=request.record_id,
-                column_name="date",
-                vals=request.off_dates
-            )
+            get_booking_obj = GetBooking(record_id=request.record_id,
+                                         column_name="date",
+                                         vals=request.off_dates)
+            booking_obj = self.booking_db_utils.get_bookings(get_booking_obj)
 
             if not booking_obj:
                 logger.info("No bookings to update for off days")

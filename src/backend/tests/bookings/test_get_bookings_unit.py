@@ -61,13 +61,9 @@ def test_get_bookings_with_none_column_name(mock_db):
 
 def test_get_bookings_with_none_vals(mock_db):
     booking_db_utils = BookingDBUtils(db=mock_db)
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(ValueError, match="At least one off date must be provided") as exc_info:
         booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
-                                      column_name="date",
-                                      vals=[])
-    assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "Missing input"
-
+                                      column_name="date", vals=[])       
 # def test_get_bookings_with_invalid_record_id(setup_db):
 #     if not setup_db:
 #         pytest.skip("Database connection could not be established.")

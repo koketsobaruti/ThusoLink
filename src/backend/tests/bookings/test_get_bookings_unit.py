@@ -6,6 +6,7 @@ import pytest
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 from unittest.mock import MagicMock
+from ...schemas.business.bookings_schema import GetBooking
 
 class BookingsTest:
     record_id:str
@@ -64,10 +65,12 @@ def test_get_bookings_with_none_vals(mock_db):
     with pytest.raises(ValueError, match="At least one off date must be provided"):
         booking_db_utils.get_bookings(record_id="7a74a6af-cbda-46cd-90e6-2ca299210b67",
                                       column_name="date", vals=[])       
-def test_get_bookings_with_invalid_record_id(setup_db):
-    if not setup_db:
-        pytest.skip("Database connection could not be established.")
-    booking_db_utils = BookingDBUtils(db=setup_db)
+def test_get_bookings_with_invalid_record_id(mock_db):
+
+    booking_db_utils = BookingDBUtils(db=mock_db)
+    request = GetBooking(record_id="invalid_record_id",
+                                      column_name="date",
+                                      vals=["2026-02-12"])
     with pytest.raises(HTTPException) as exc_info:
         booking_db_utils.get_bookings(record_id="invalid_record_id",
                                       column_name="date",

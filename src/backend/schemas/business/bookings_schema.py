@@ -1,5 +1,5 @@
 from uuid import UUID
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 from typing import Optional, List
 from datetime import datetime, timezone, date, time
 from enum import Enum
@@ -59,3 +59,31 @@ class WhatsappBookingPayLoad(BaseModel):
     message_text: str
     booking_id: str
     to_number: str
+
+class GetBooking(BaseModel):
+    record_id:UUID 
+    column_name: str
+    vals: list[date]
+    
+    @field_validator("vals")
+    @classmethod
+    def validate_off_dates(cls, value):
+        if not value:
+            raise ValueError("At least one value must be provided")
+        return value
+    
+    @field_validator("column_name")
+    @classmethod
+    def validate_request_type(cls, value):
+        if not isinstance(value, str):
+            raise ValueError("Input a valid input for column name")
+        
+        return value
+    
+    @field_validator("record_id")
+    @classmethod
+    def validate_record_id(cls, value):
+        if not UUID(str(value)):
+            raise ValidationError("Invalid request input for the record id")
+        
+        return value

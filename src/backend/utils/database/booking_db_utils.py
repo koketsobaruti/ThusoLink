@@ -333,7 +333,7 @@ class BookingDBUtils:
             """).bindparams(bindparam("booking_ids", expanding=True))
         try:
             self.db.execute(query, {
-                "booking_status": request.status_value,
+                "booking_status": request.status_value.value,
                 "booking_ids": request.booking_id
             })
 

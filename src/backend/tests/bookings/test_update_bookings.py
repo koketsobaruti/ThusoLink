@@ -27,12 +27,10 @@ def setup_db():
         
 def test_update_booking_status_valid():
     # Arrange
-    booking_obj = [{"id":[uuid.UUID("fa97be97-1f81-4753-a99a-1b82477e34b4")],
-                "booking_type":"BUSINESS"}]
     update_bookings_obj = UpdateBookings(booking_id=[uuid.UUID("fa97be97-1f81-4753-a99a-1b82477e34b4")],
-                                         status_value=BookingStatus.RESCHEDULE_REQUIRED.value)
+                                         status_value=BookingStatus.RESCHEDULE_REQUIRED)
 
     actual_status = update_bookings_obj.status_value
-
+    print(BookingStatus.RESCHEDULE_REQUIRED.value)
     assert actual_status == BookingStatus.RESCHEDULE_REQUIRED.value
 # def test_update_booking_status_valid():

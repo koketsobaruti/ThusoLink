@@ -337,6 +337,7 @@ class BookingDBUtils:
                 "booking_status": request.status_value.value,
                 "booking_ids": request.booking_id
             })
+            
         except SQLAlchemyError as e:
             self.db.rollback()
             raise database_exception.DatabaseError(f"Failed to update bookings: {e}")

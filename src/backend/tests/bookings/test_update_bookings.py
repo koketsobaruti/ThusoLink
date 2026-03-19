@@ -34,15 +34,14 @@ def mock_db():
 def test_update_booking_status_valid():
     # Arrange
     update_bookings_obj = UpdateBookings(booking_id=[uuid.uuid4()],
-                                         status_value=BookingStatus.RESCHEDULE_REQUIRED)
+                                         status_value=AvailabilityStatus.RESCHEDULE_REQUIRED)
     actual_status = update_bookings_obj.status_value
-    print(BookingStatus.RESCHEDULE_REQUIRED.value)
-    assert actual_status == BookingStatus.RESCHEDULE_REQUIRED.value
+    assert actual_status == AvailabilityStatus.RESCHEDULE_REQUIRED.value
 
 def test_invalid_id():
     with pytest.raises(ValueError, match="UUID"):
         UpdateBookings(booking_id=["not-uuid"],
-                       status_value=BookingStatus.RESCHEDULE_REQUIRED)
+                       status_value=AvailabilityStatus.RESCHEDULE_REQUIRED)
 def test_invalid_booking_status():
     with pytest.raises(ValueError):
         UpdateBookings(
@@ -52,7 +51,7 @@ def test_invalid_booking_status():
 def test_missing_id():
     with pytest.raises(ValueError):
         UpdateBookings(booking_id=[],
-                       status_value=BookingStatus.RESCHEDULE_REQUIRED)
+                       status_value=AvailabilityStatus.RESCHEDULE_REQUIRED)
         
 def test_missing_inputs():
     with pytest.raises(ValueError):

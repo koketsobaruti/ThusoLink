@@ -183,24 +183,4 @@ class AvailabilityDBUtils:
                 detail=f"Failed to update availability status: {e}",
             )
         
-    def update_booking_status(self, booking_ids, status_value: str):
-
-            # Normalize to list
-        if not isinstance(booking_ids, Iterable) or isinstance(booking_ids, (str, bytes)):
-            booking_ids = [booking_ids]
-        query = text("""
-                UPDATE booking
-                SET status = :status
-                WHERE id IN :booking_ids
-            """).bindparams(bindparam("booking_ids", expanding=True))
-        try:
-            self.db.execute(query, {
-                "status": status_value,
-                "booking_ids": booking_ids
-            })
-
-            self.db.commit()
-
-        except SQLAlchemyError as e:
-            self.db.rollback()
-            raise database_exception.DatabaseError(f"Failed to update bookings: {e}")
+   

@@ -214,7 +214,7 @@ class ScheduleManager:
                 logger.info("No bookings to update for off days")
                 return  # ✅ Normal case — just exit cleanly
             update_bookings_obj = UpdateBookings(booking_id=[b["id"] for b in booking_obj],  # since you return dicts
-                                                status_value=BookingStatus.RESCHEDULE_REQUIRED.value)
+                                                status_value=AvailabilityStatus.RESCHEDULE_REQUIRED.value)
             self.booking_db_utils.update_booking_status(update_bookings_obj)
         except Exception as e:
             logger.error(f"Error updating bookings for off days: {str(e)}")

@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from typing import Optional, List
 from datetime import datetime, timezone, date, time
 from enum import Enum
-from .schedule_schema import AvailabilityType
+from .schedule_schema import AvailabilityStatus, AvailabilityType
 
 class BookingStatus(str, Enum):
     REQUESTED = "requested"
@@ -93,7 +93,7 @@ class GetBooking(BaseModel):
 
 class UpdateBookings(BaseModel):
     booking_id: list[UUID]
-    status_value: BookingStatus
+    status_value: AvailabilityStatus
 
     @field_validator("booking_id")
     @classmethod
@@ -109,7 +109,7 @@ class UpdateBookings(BaseModel):
     @field_validator("status_value")
     @classmethod
     def validate_status_type(cls, option):
-        if option not in [e.value for e in BookingStatus]:
+        if option not in [e.value for e in AvailabilityStatus]:
             raise  ValueError("Select appropriate booking status")
         if option is None:
             raise ValueError("Input value for booking status")

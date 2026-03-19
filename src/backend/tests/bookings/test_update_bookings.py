@@ -77,6 +77,19 @@ def test_update_booking_db_valid(mock_db):
     # 3️⃣ Rollback not called
     mock_db.rollback.assert_not_called()
 
-def test_update_using_actual_db():
-    pass
+def test_update_using_actual_db(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    booking_db_utils = BookingDBUtils(db=setup_db)
+    booking_id = uuid.UUID("30cadfdf-1828-4084-a82a-2b16481bbac2")
+    update_obj = UpdateBookings(booking_id=[booking_id],
+                                status_value=BookingStatus.RESCHEDULE_REQUIRED)
+    with setup_db.begin_nested():
+        booking_db_utils.update_booking_status(update_obj)
+
+        result = setup_db.execute(
+            "SELECT booking_status FROM booking WHERE id=:id",
+            {"id":booking_id}).fetchone()
+        
+        assert result.booking_status == BookingStatus.RESCHEDULE_REQUIRED
 

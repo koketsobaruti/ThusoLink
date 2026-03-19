@@ -6,16 +6,15 @@ import enum
 from datetime import date, time
 
 class AvailabilityStatus(str, enum.Enum):
-    AVAILABLE = "available"
-    REQUESTED = "requested"
-    BOOKED = "booked"
-    COMPLETED = "completed"
-    UNAVAILABLE = "unavailable"
-    CANCELLED = "cancelled"
-    RESCHEDULED = "rescheduled"
-    EXPIRED = "expired"
-    RESCHEDULE_REQUIRED = "reschedule_required"
-    
+    AVAILABLE = "AVAILABLE"
+    REQUESTED = "REQUESTED"
+    BOOKED = "BOOKED"
+    COMPLETED = "COMPLETED"
+    UNAVAILABLE = "UNAVAILABLE"
+    CANCELLED = "CANCELLED"
+    RESCHEDULED = "RESCHEDULED"
+    EXPIRED = "EXPIRED"
+    RESCHEDULE_REQUIRED = "RESCHEDULE_REQUIRED"
 
 class AvailabilityType(str, enum.Enum):
     BUSINESS = "business"

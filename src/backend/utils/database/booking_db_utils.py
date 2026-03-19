@@ -330,15 +330,13 @@ class BookingDBUtils:
                 UPDATE booking
                 SET booking_status = :booking_status
                 WHERE id IN :booking_ids
+                     AND booking_status <> :booking_status
             """).bindparams(bindparam("booking_ids", expanding=True))
         try:
             self.db.execute(query, {
                 "booking_status": request.status_value.value,
                 "booking_ids": request.booking_id
             })
-
-            self.db.commit()
-
         except SQLAlchemyError as e:
             self.db.rollback()
             raise database_exception.DatabaseError(f"Failed to update bookings: {e}")

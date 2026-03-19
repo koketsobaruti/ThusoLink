@@ -24,13 +24,53 @@ def setup_db():
         db.close()
     except Exception as e:
         print(f"Error setting up database: {e}")
-        
+
+@pytest.fixture
+def mock_db():
+    db = MagicMock()
+    return db
+
 def test_update_booking_status_valid():
     # Arrange
-    update_bookings_obj = UpdateBookings(booking_id=[uuid.UUID("fa97be97-1f81-4753-a99a-1b82477e34b4")],
+    update_bookings_obj = UpdateBookings(booking_id=[uuid.uuid4()],
                                          status_value=BookingStatus.RESCHEDULE_REQUIRED)
-
     actual_status = update_bookings_obj.status_value
     print(BookingStatus.RESCHEDULE_REQUIRED.value)
     assert actual_status == BookingStatus.RESCHEDULE_REQUIRED.value
-# def test_update_booking_status_valid():
+
+def test_invalid_id():
+    with pytest.raises(ValueError, match="UUID"):
+        UpdateBookings(booking_id=["not-uuid"],
+                       status_value=BookingStatus.RESCHEDULE_REQUIRED)
+def test_invalid_booking_status():
+    with pytest.raises(ValueError):
+        UpdateBookings(
+            booking_id=[uuid.uuid4()],
+            status_value="invalid_status"
+        )
+def test_missing_id():
+    with pytest.raises(ValueError):
+        UpdateBookings(booking_id=[],
+                       status_value=BookingStatus.RESCHEDULE_REQUIRED)
+        
+def test_missing_inputs():
+    with pytest.raises(ValueError):
+        UpdateBookings(booking_id=[],
+                       status_value="")
+        
+
+def test_update_booking_db_valid(mock_db):
+    booking_db_utils = BookingDBUtils(db=mock_db)
+    update_bookings_obj = UpdateBookings(booking_id=[uuid.UUID("fa97be97-1f81-4753-a99a-1b82477e34b4")],
+                                         status_value=BookingStatus.RESCHEDULE_REQUIRED)
+    booking_db_utils.update_booking_status(update_bookings_obj)
+    args, kwargs = mock_db.execute.call_args
+    assert "UPDATE booking" in str(args[0])  # query string
+    assert kwargs["status"] == BookingStatus.RESCHEDULE_REQUIRED
+    assert kwargs["booking_ids"] == [uuid.UUID("fa97be97-1f81-4753-a99a-1b82477e34b4")]
+
+    # 2️⃣ Commit called
+    mock_db.commit.assert_called_once()
+
+    # 3️⃣ Rollback not called
+    mock_db.rollback.assert_not_called()

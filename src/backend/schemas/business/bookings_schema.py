@@ -91,17 +91,19 @@ class GetBooking(BaseModel):
             raise ValueError("The record id must not be null")
         return value
 
-class UpdateBookings:
+class UpdateBookings(BaseModel):
     booking_id: list[UUID]
     status_value: BookingStatus
 
     @field_validator("booking_id")
     @classmethod
     def validate_booking_id(cls, value):
-        if not UUID(str(value)):
-            raise ValidationError("Invalid request input for the booking id")
         if not value:
             raise ValueError("The booking id must not be null")
+        for booking_id in value:
+            if not isinstance(booking_id, UUID):
+                raise ValueError("Invalid booking id")
+
         return value
     
     @field_validator("status_value")

@@ -14,6 +14,7 @@ class AvailabilityStatus(str, enum.Enum):
     CANCELLED = "cancelled"
     RESCHEDULED = "rescheduled"
     EXPIRED = "expired"
+    RESCHEDULE_REQUIRED = "reschedule_required"
     
 
 class AvailabilityType(str, enum.Enum):

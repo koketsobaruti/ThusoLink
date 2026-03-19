@@ -113,3 +113,4 @@ class UpdateBookings(BaseModel):
             raise  ValueError("Select appropriate booking status")
         if option is None:
             raise ValueError("Input value for booking status")
+        return option

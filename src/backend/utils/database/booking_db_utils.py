@@ -328,12 +328,12 @@ class BookingDBUtils:
         #     booking_ids = [request.booking_id]
         query = text("""
                 UPDATE booking
-                SET status = :status
+                SET booking_status = :booking_status
                 WHERE id IN :booking_ids
             """).bindparams(bindparam("booking_ids", expanding=True))
         try:
             self.db.execute(query, {
-                "status": request.status_value,
+                "booking_status": request.status_value,
                 "booking_ids": request.booking_id
             })
 

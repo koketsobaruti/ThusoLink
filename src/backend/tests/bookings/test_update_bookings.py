@@ -66,11 +66,17 @@ def test_update_booking_db_valid(mock_db):
     booking_db_utils.update_booking_status(update_bookings_obj)
     args, kwargs = mock_db.execute.call_args
     assert "UPDATE booking" in str(args[0])  # query string
-    assert kwargs["status"] == BookingStatus.RESCHEDULE_REQUIRED
-    assert kwargs["booking_ids"] == [uuid.UUID("fa97be97-1f81-4753-a99a-1b82477e34b4")]
+    params = args[1]  # the dict with 'status' and 'booking_ids'
+
+    assert params["status"] == BookingStatus.RESCHEDULE_REQUIRED
+    assert params["booking_ids"] == [uuid.UUID("fa97be97-1f81-4753-a99a-1b82477e34b4")]
 
     # 2️⃣ Commit called
     mock_db.commit.assert_called_once()
 
     # 3️⃣ Rollback not called
     mock_db.rollback.assert_not_called()
+
+def test_update_using_actual_db():
+    pass
+

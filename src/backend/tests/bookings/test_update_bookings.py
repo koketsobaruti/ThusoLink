@@ -68,7 +68,7 @@ def test_update_booking_db_valid(mock_db):
     assert "UPDATE booking" in str(args[0])  # query string
     params = args[1]  # the dict with 'status' and 'booking_ids'
 
-    assert params["status"] == BookingStatus.RESCHEDULE_REQUIRED
+    assert params["booking_status"] == BookingStatus.RESCHEDULE_REQUIRED
     assert params["booking_ids"] == [uuid.UUID("fa97be97-1f81-4753-a99a-1b82477e34b4")]
 
     # 2️⃣ Commit called
@@ -83,7 +83,7 @@ def test_update_using_actual_db(setup_db):
     booking_db_utils = BookingDBUtils(db=setup_db)
     booking_id = uuid.UUID("30cadfdf-1828-4084-a82a-2b16481bbac2")
     update_obj = UpdateBookings(booking_id=[booking_id],
-                                status_value=BookingStatus.RESCHEDULE_REQUIRED)
+                                status_value=BookingStatus.RESCHEDULE_REQUIRED.value)
     with setup_db.begin_nested():
         booking_db_utils.update_booking_status(update_obj)
 
@@ -91,5 +91,5 @@ def test_update_using_actual_db(setup_db):
             "SELECT booking_status FROM booking WHERE id=:id",
             {"id":booking_id}).fetchone()
         
-        assert result.booking_status == BookingStatus.RESCHEDULE_REQUIRED
+        assert result.booking_status == BookingStatus.RESCHEDULE_REQUIRED.value
 

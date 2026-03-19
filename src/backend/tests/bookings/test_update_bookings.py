@@ -10,6 +10,7 @@ from ...schemas.business.bookings_schema import GetBooking
 from ...schemas.business.bookings_schema import UpdateBookings
 from ...schemas.business.bookings_schema import BookingStatus
 from ...schemas.business.schedule_schema import AvailabilityStatus
+from sqlalchemy import text
 @pytest.fixture
 def mock_db():
     db = MagicMock()
@@ -83,12 +84,12 @@ def test_update_using_actual_db(setup_db):
     booking_db_utils = BookingDBUtils(db=setup_db)
     booking_id = uuid.UUID("30cadfdf-1828-4084-a82a-2b16481bbac2")
     update_obj = UpdateBookings(booking_id=[booking_id],
-                                status_value=AvailabilityStatus.RESCHEDULE_REQUIRED.value)
+                                status_value=AvailabilityStatus.RESCHEDULE_REQUIRED)
     with setup_db.begin_nested():
         booking_db_utils.update_booking_status(update_obj)
-
+    with setup_db.begin_nested():
         result = setup_db.execute(
-            "SELECT booking_status FROM booking WHERE id=:id",
-            {"id":booking_id}).fetchone()
+            text("""SELECT booking_status FROM booking WHERE id=:id"""),
+          {"id":booking_id}).fetchone()
         
-        assert result.booking_status == AvailabilityStatus.RESCHEDULE_REQUIRED
+        assert result.booking_status == AvailabilityStatus.RESCHEDULE_REQUIRED.value

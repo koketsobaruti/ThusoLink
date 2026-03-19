@@ -323,9 +323,9 @@ class BookingDBUtils:
             raise database_exception.DatabaseError(f"Failed to persist bookings: {e}")
 
     def update_booking_status(self, request: UpdateBookings):
-        #  Normalize to list
-        if not isinstance(request.booking_id, Iterable) or isinstance(request.booking_id, (str, bytes)):
-            booking_ids = [request.booking_id]
+        # #  Normalize to list
+        # if not isinstance(request.booking_id, Iterable) or isinstance(request.booking_id, (str, bytes)):
+        #     booking_ids = [request.booking_id]
         query = text("""
                 UPDATE booking
                 SET status = :status
@@ -334,7 +334,7 @@ class BookingDBUtils:
         try:
             self.db.execute(query, {
                 "status": request.status_value,
-                "booking_ids": booking_ids
+                "booking_ids": request.booking_id
             })
 
             self.db.commit()

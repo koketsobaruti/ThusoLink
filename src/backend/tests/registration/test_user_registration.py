@@ -7,7 +7,7 @@ from ...utils.database.db_utils import DBUtils
 from unittest import mock
 from ...models.user.user_model import User
 from datetime import datetime, timezone
-
+from ...schemas.user.user_schema import UserCreate
 @pytest.fixture()
 def mock_user():
     mock = mock.MagicMock(spec=User)
@@ -34,9 +34,33 @@ def setup_db():
     finally:
         db.close()
 
-
 def test_email_exists_with_existing_email(setup_db):
     if not setup_db:
         pytest.skip("Database connection could not be established.")
     db_utils = DBUtils(setup_db)
-    actual = db_utils.email_exists("fakemeail@example.com")
+    with pytest.raises(HTTPException) as exc_info:
+        db_utils.email_exists("test@example.com")
+    assert exc_info.value.detail == "Email already registered."
+    assert exc_info.value.status_code == 400
+
+def test_email_exists_with_non_existing_email(setup_db):
+    if not setup_db:
+        pytest.skip("Database connection could not be established.")
+    db_utils = DBUtils(setup_db)
+    assert db_utils.email_exists("none@example.com") == None
+
+def test_email_exists_with_db_error(mock_db):
+    db_utils = DBUtils(mock_db)
+    mock_db.query().filter().first.side_effect = Exception()
+    with pytest.raises(HTTPException):
+        db_utils.email_exists("false@example.com")
+
+def test_incorrect_details():
+    with pytest.raises(ValueError) as exc_info:
+        UserCreate(
+            full_name="Test User",
+            email="invalid-email",
+            password="password123"
+        )
+        assert exc_info.value.errors()[0]['loc'] == ('email',)
+        assert exc_info.value.errors()[0]['msg'] == 'value is not a valid email address'

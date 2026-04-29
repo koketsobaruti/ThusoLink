@@ -10,6 +10,7 @@ from ...models.user.user_model import User
 from ...schemas.user.user_schema import UserCreate
 from typing import Union
 from ...utils.logger_utils import LoggerUtils
+from sqlalchemy.exc import SQLAlchemyError
 logger = LoggerUtils.get_logger("DB Utils")
 class DBUtils:
     def __init__(self, db: Session):
@@ -19,14 +20,20 @@ class DBUtils:
         """
         Raises HTTPException if a user with the given email already exists.
         """
-        existing_user = self.db.query(User).filter(User.email == email).first()
-        if existing_user:
-            logger.warning(f"Attempt to register with existing email: {email}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered."
-            )
-
+        # add db exception handling
+        try:
+            existing_user = self.db.query(User).filter(User.email == email).first()
+            if existing_user:
+                logger.warning(f"Attempt to register with existing email: {email}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already registered."
+                )
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error(f"Database error: {str(e)}")
+            raise e
+        
     def business_exists(self, business_data: Union[BusinessCreate, BusinessUpdate]) -> bool:
         """
         Check whether a business with the same name, contacts, or socials exists.
@@ -94,59 +101,85 @@ class DBUtils:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error checking business existence: {str(e)}"
             )
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error(f"Database error: {str(e)}")
+            raise e
     
     def get_current_user_id(self, email) -> int:
-        logger.info(f"Fetching user ID for email: {email}")
-        user_obj = self.db.query(User).filter(User.email == email).first()
-        if not user_obj:
-            logger.error(f"User not found in DB for email: {email}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found."
-            )
-        return user_obj.id
-    
-    def get_current_username(self, customer_id):
-        customer = self.db.query(User).filter(User.id == customer_id).first()
-        if not customer:
-            logger.error(f"Customer not found in DB for ID: {customer_id}")
-            raise HTTPException(
+        try:
+            logger.info(f"Fetching user ID for email: {email}")
+            user_obj = self.db.query(User).filter(User.email == email).first()
+            if not user_obj:
+                logger.error(f"User not found in DB for email: {email}")
+                raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Customer not found."
+                    detail="User not found."
                 )
-            
-        return customer
+            return user_obj.id
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error(f"Database error: {str(e)}")
+            raise e
+
+    def get_current_username(self, customer_id):
+        try:
+            customer = self.db.query(User).filter(User.id == customer_id).first()
+            if not customer:
+                logger.error(f"Customer not found in DB for ID: {customer_id}")
+                raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Customer not found."
+                    )
+                
+            return customer
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error(f"Database error: {str(e)}")
+            raise e
         
     def get_business_id(self, business_name: str) -> str:
-        logger.info(f"Fetching business ID for business name: {business_name}")
-        business_obj = self.db.query(Business).filter(Business.name == business_name).first()
-        if not business_obj:
-            logger.error(f"Business not found in DB for name: {business_name}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Business not found."
-            )
-        return business_obj.id
-    
+        try:
+            logger.info(f"Fetching business ID for business name: {business_name}")
+            business_obj = self.db.query(Business).filter(Business.name == business_name).first()
+            if not business_obj:
+                logger.error(f"Business not found in DB for name: {business_name}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Business not found."
+                )
+            return business_obj.id
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error(f"Database error: {str(e)}")
+            raise e
     
     def user_business_exists(self, business_id: str, user_id: int):
-        business_obj = self.db.query(Business).filter(
-            Business.id == business_id,
-            Business.owner_id == user_id
-        ).first()
-        if not business_obj:
-            logger.error(f"Business not found or does not belong to user ID: {user_id}")
-            raise HTTPException(status_code=403, detail="User does not own this business")
+        try:
+            business_obj = self.db.query(Business).filter(
+                Business.id == business_id,
+                Business.owner_id == user_id
+            ).first()
+            if not business_obj:
+                logger.error(f"Business not found or does not belong to user ID: {user_id}")
+                raise HTTPException(status_code=403, detail="User does not own this business")
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error(f"Database error: {str(e)}")
+            raise e
     
     def existing_service(self, service_name: str, business_id: str):
-        logger.info(f"Checking for existing service '{service_name}' in business ID: {business_id}")
-        existing_service = self.db.query(BusinessService).filter(
-            BusinessService.business_id == business_id,
-            BusinessService.name.ilike(service_name)
-        ).first()
-        if existing_service:
-            logger.warning(f"Service '{service_name}' already exists in business ID: {business_id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Service '{service_name}' already exists for this business."
-            )
+        try:
+            logger.info(f"Checking for existing service '{service_name}' in business ID: {business_id}")
+            existing_service = self.db.query(BusinessService).filter(BusinessService.business_id == business_id, 
+                                                                     BusinessService.name.ilike(service_name)).first()
+            if existing_service:
+                logger.warning(f"Service '{service_name}' already exists in business ID: {business_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Service '{service_name}' already exists for this business."
+                )
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error(f"Database error: {str(e)}")
+            raise e

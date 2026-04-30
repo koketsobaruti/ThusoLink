@@ -1,6 +1,8 @@
+from ...models.business.service_model import BusinessService
+from ...schemas.business.service_schema import BusinessServiceCreate
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from backend.utils.auth.hash_utils import hash_password
+from ...utils.auth.hash_utils import hash_password
 from ...models.business.business_model import Business
 from ...utils.database.db_utils import DBUtils
 from ...schemas.user.user_schema import UserCreate, UserResponse
@@ -44,11 +46,6 @@ class RegistrationManager:
             return GeneralResponse(status=status.HTTP_201_CREATED,
                                    message="User registered successfully"
                                    )
-        # ({
-            #     "status": "success",
-            #     "message": "User registered successfully",
-            #     "user": UserResponse.model_validate(new_user)
-            # })     
 
         except Exception as e:
             self.db.rollback()
@@ -65,10 +62,13 @@ class RegistrationManager:
             
             # If no duplicates, proceed to create business
             # 2️⃣ Create the Business object and set relationships
+            now = datetime.now(timezone.utc)
             new_business = Business(
                 owner_id=user_id,
                 name=business.name,
-                description=business.description
+                description=business.description,
+                created_at=now,
+                updated_at=now
             )
 
             # # 3️⃣ Add contacts via relationship
@@ -124,3 +124,37 @@ class RegistrationManager:
                 detail=f"An error occurred: {str(e)}"
             )
         
+    def register_service(self, service:BusinessServiceCreate, user_id, business_id) -> GeneralResponse:
+        try:
+            # Ensure the business belongs to the user
+            self.db_utils.user_business_exists(business_id, user_id)
+            # Check for duplicate service name within the same business
+            self.db_utils.existing_service(service.name, business_id)
+            
+            # Create the service
+            new_service = BusinessService(
+                business_id=business_id,
+                name=service.name,
+                description=service.description,
+                price=service.price,
+                currency=service.currency.value,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc)
+            )
+            
+            self.db.add(new_service)
+            self.db.commit()
+
+            return GeneralResponse(
+                status=status.HTTP_201_CREATED,
+                message="Service registered successfully",
+                data={"name": new_service.name}
+            )
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error during service registration: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"An error occurred: {str(e)}"
+            )

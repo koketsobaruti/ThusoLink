@@ -4,8 +4,9 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from enum import Enum
-from backend.database.connection import Base
+from ...database.connection import Base
 from ...schemas.business.business_schema import SocialPlatform
+from .schedule_model import BusinessAvailability
 
 # ------------------- Business Model -------------------
 class Business(Base):
@@ -27,12 +28,13 @@ class Business(Base):
 
     # Relationships
     owner = relationship("User", back_populates="businesses")
+    services = relationship("BusinessService", back_populates="business")
     phones = relationship("BusinessPhone", back_populates="businesses", cascade="all, delete-orphan")
     emails = relationship("BusinessEmail", back_populates="businesses", cascade="all, delete-orphan")
     # contacts = relationship("BusinessContact", back_populates="businesses", cascade="all, delete-orphan")
     locations = relationship("BusinessLocation", back_populates="businesses", cascade="all, delete-orphan")
     socials = relationship("BusinessSocial", back_populates="businesses", cascade="all, delete-orphan")
-
+    availability = relationship("BusinessAvailability", back_populates="business", cascade="all, delete-orphan")
 # ------------------- BusinessContact -------------------
 # class BusinessContact(Base):
 #     __tablename__ = "business_contacts"

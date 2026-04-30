@@ -32,7 +32,6 @@ Base = declarative_base()
 
 # Dependency for routes
 def get_db():
-    from sqlalchemy.orm import Session
     db = SessionLocal()
     try:
         yield db

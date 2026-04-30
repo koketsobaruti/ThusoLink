@@ -2,11 +2,15 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from backend.database.connection import Base  # Import your Base model
+from backend.database.connection import Base
 from alembic import context
+
+from backend.models.auth import token_blacklist
 from backend.models.user import user_model
 from backend.models.business import business_model
-
+from backend.models.business import service_model
+from backend.models.business import schedule_model
+from backend.models.business import booking_model
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

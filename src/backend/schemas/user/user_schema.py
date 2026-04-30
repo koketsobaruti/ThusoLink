@@ -37,14 +37,9 @@ PasswordStr = Annotated[
 ]
 
 class UserBase(BaseModel):
-    id: Optional[uuid.UUID]
     full_name: str = Field(..., min_length=2)
     email: Optional[EmailStr]
-    timestamps: Optional["Timestamps"]
 
-# -------------------------
-# User creation model
-# -------------------------
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
@@ -79,5 +74,5 @@ class UserResponse(BaseModel):
     full_name: str
     email: EmailStr
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

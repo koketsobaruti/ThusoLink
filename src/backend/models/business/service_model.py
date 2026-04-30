@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 import uuid
-from backend.database.connection import Base
+from ...database.connection import Base
 
 class BusinessService(Base):
     __tablename__ = "business_services"
@@ -25,3 +25,5 @@ class BusinessService(Base):
     )
 
     business = relationship("Business", back_populates="services")
+    # availability = relationship("ServiceAvailability", back_populates="service", cascade="all, delete-orphan")
+    

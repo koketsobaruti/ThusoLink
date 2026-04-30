@@ -1,6 +1,6 @@
 # app/dependencies.py
 from fastapi import Request, HTTPException, status
-from backend.config.config import settings
+from ..config.config import settings
 
 def get_current_user(request: Request):
     user = request.session.get("user")  # if using Starlette session middleware

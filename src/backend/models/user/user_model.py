@@ -1,11 +1,11 @@
 # src/backend/models/user_model.py
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
-from backend.database.connection import Base
+from ...database.connection import Base
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
-from backend.models.business.business_model import Business
+from ..business.business_model import Business
 
 class User(Base):
     __tablename__ = "users"
@@ -25,4 +25,7 @@ class User(Base):
     # Relationships
     # # User model
     businesses = relationship("Business", back_populates="owner")
+    # business_bookings = relationship("BusinessBooking", back_populates="user", cascade="all, delete-orphan")
+    # service_bookings = relationship("ServiceBooking", back_populates="user", cascade="all, delete-orphan")
+
 

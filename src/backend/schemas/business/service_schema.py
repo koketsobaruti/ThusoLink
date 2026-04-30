@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 # ------------------- Currency Enum -------------------
@@ -13,15 +13,16 @@ class CurrencyEnum(str, Enum):
     EUR = "EUR"  # Euro
 
 # ------------------- Base Schema -------------------
-class BusinessServiceBase(BaseModel):
+class BusinessServiceCreate(BaseModel):
     name: str
     description: Optional[str] = None
     price: float
     currency: CurrencyEnum = CurrencyEnum.BWP  # default to Pula
 
 # ------------------- Create Schema -------------------
-class BusinessServiceCreate(BusinessServiceBase):
-    created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
+# class BusinessServiceCreate(BusinessServiceBase):
+#     business_id: UUID
+#     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # ------------------- Update Schema -------------------
 class BusinessServiceUpdate(BaseModel):
@@ -31,11 +32,20 @@ class BusinessServiceUpdate(BaseModel):
     currency: Optional[CurrencyEnum] = None
 
 # ------------------- Response Schema -------------------
-class BusinessServiceResponse(BusinessServiceBase):
+class BusinessServiceResponse(BaseModel):
     id: UUID
     business_id: UUID
+    name: str
+    description: str
+    price: float
+    currency: str
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
+
+
+class BusinessServiceListResponse(BaseModel):
+    services: list[BusinessServiceResponse]

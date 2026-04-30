@@ -1,59 +1,38 @@
 # backend/config/config.py
-
+from pathlib import Path
 from pydantic_settings import BaseSettings
 from typing import ClassVar
-import os
+import os 
 import secrets
 from dotenv import load_dotenv
-
-# Load .env ONLY if it exists (local development)
-if os.path.exists(".env"):
-    load_dotenv()
-
+ENV_FILE = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+# import logger
+print(f"Loading environment variables from: {ENV_FILE}")
+load_dotenv(dotenv_path=ENV_FILE)
 class Settings(BaseSettings):
-    # Security
-    SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
+    # SECRET_KEYs: str
+    SECRET_KEY: str = secrets.token_urlsafe(32)
+    SESSION_EXPIRE_MINUTES: int = 60
+    DATABASE_URL: str
+    WHATSAPP_PHONE_NUMBER_ID : int
+    WHATSAPP_BASE_URL: str
     ALGORITHM: str = "HS256"
-
-    # Tokens
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    SESSION_EXPIRE_MINUTES: int = 60
-
-    # Database
-    DATABASE_URL: str
-
-    # WhatsApp / Meta API
-    WHATSAPP_PHONE_NUMBER_ID: int
-    WHATSAPP_BASE_URL: str
-    WHATSAPP_TOKEN: str
-
-    # App credentials
+    WHATSAPP_TOKEN : str
     APP_ID: str
     APP_SECRET: str
-
-    # Messaging
     RECIPIENT_WAID: str
-    VERIFY_TOKEN: str
-    ACCESS_TOKEN: str
     VERSION: str
-
-    # Config behavior
+    ACCESS_TOKEN: str
+    VERIFY_TOKEN: str
+    # ✅ For non-field attributes, use ClassVar
     env_file_encoding: ClassVar[str] = "utf-8"
 
     model_config = {
+        "env_file": str(ENV_FILE),
         "extra": "ignore"
     }
 
-# Instantiate settings
 settings = Settings()
 
-# Optional: Fail fast if critical variables are missing
-required_vars = [
-    "DATABASE_URL",
-    "SECRET_KEY",
-]
-
-for var in required_vars:
-    if not getattr(settings, var):
-        raise ValueError(f"{var} is not set in environment variables")

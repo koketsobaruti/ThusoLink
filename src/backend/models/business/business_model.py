@@ -34,7 +34,7 @@ class Business(Base):
     # contacts = relationship("BusinessContact", back_populates="businesses", cascade="all, delete-orphan")
     locations = relationship("BusinessLocation", back_populates="businesses", cascade="all, delete-orphan")
     socials = relationship("BusinessSocial", back_populates="businesses", cascade="all, delete-orphan")
-    availability = relationship("BusinessAvailability", back_populates="business", cascade="all, delete-orphan")
+    # availability = relationship("BusinessAvailability", back_populates="business", cascade="all, delete-orphan")
 # ------------------- BusinessContact -------------------
 # class BusinessContact(Base):
 #     __tablename__ = "business_contacts"

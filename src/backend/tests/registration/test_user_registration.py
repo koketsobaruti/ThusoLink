@@ -8,6 +8,9 @@ from unittest import mock
 from ...models.user.user_model import User
 from datetime import datetime, timezone
 from ...schemas.user.user_schema import UserCreate
+from ...utils.auth.hash_utils import hash_password
+from sqlalchemy.exc import SQLAlchemyError
+from ...modules.auth.registration_manager import RegistrationManager
 @pytest.fixture()
 def mock_user():
     mock = mock.MagicMock(spec=User)
@@ -51,11 +54,11 @@ def test_email_exists_with_non_existing_email(setup_db):
 
 def test_email_exists_with_db_error(mock_db):
     db_utils = DBUtils(mock_db)
-    mock_db.query().filter().first.side_effect = Exception()
-    with pytest.raises(HTTPException):
+    mock_db.query().filter().first.side_effect = SQLAlchemyError()
+    with pytest.raises(SQLAlchemyError):
         db_utils.email_exists("false@example.com")
 
-def test_incorrect_details():
+def test_register_incorrect_details():
     with pytest.raises(ValueError) as exc_info:
         UserCreate(
             full_name="Test User",
@@ -64,3 +67,12 @@ def test_incorrect_details():
         )
         assert exc_info.value.errors()[0]['loc'] == ('email',)
         assert exc_info.value.errors()[0]['msg'] == 'value is not a valid email address'
+
+def test_register_valid_details(mock_db):
+    user_data = UserCreate(
+        full_name="Test User",
+        email="testeraccount@example.com",
+        password=hash_password("password123")
+    )
+    registration_manager = RegistrationManager(mock_db)
+    assert registration_manager.register_user(user_data) is not None

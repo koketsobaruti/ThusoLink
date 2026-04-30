@@ -34,8 +34,8 @@ app = FastAPI(
 
 # Add CORS
 origins = [
-    "http://localhost:3000",  # React/Lovable frontend URL
-    "http://127.0.0.1:3000",  # Optional alternative
+    # "http://localhost:3000",  # React/Lovable frontend URL
+    # "http://127.0.0.1:3000",  # Optional alternative
     "https://v0-create-next-app-beta.vercel.app/"
 ]
 

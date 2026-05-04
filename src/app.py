@@ -36,8 +36,8 @@ app = FastAPI(
 origins = [
     # "http://localhost:3000",  # React/Lovable frontend URL
     # "http://127.0.0.1:3000",  # Optional alternative
-    "https://v0-create-next-app-beta.vercel.app", # Dev branch
-    "https://v0-create-next-app-git-v0-kokets-0085a1-koketsobarutis-projects.vercel.app" #current branch
+    "https://v0-create-next-app-beta.vercel.app", # Prod branch
+    "https://v0-create-next-e1a5pc73v-koketsobarutis-projects.vercel.app/" # Dev branch alternative
 ]
 
 app.add_middleware(
